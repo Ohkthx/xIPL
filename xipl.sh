@@ -6,13 +6,16 @@ WINE_ARCH="win64"
 UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
 UOPATCHER_CONFIG="./config.ini"
 
-CLIENT_DIR="./ultimaonline/ClassicUO"
+CLIENT_BASENAME="uoinstall"
+CLIENT_DIR="./$CLIENT_BASENAME/ClassicUO"
 CLIENT="ClassicUO.exe"
 CLIENT_CONFIG="settings.json"
 
 # Checks to make sure WINE is installed, along with its requirements.
 function install_wine
 {
+  REQUIRE_BREW="false"
+
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo "Detected OS: Linux"
   elif [[ "$OSTYPE" == "cygwin"* ]]; then
@@ -21,6 +24,7 @@ function install_wine
     echo "Detected OS: FreeBSD"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Detected OS: MacOS"
+    REQUIRE_BREW="true"
     if ! command -v brew &> /dev/null; then
       echo "  [!!] Brew is required and not installed."
       exit
@@ -41,12 +45,22 @@ function install_wine
 
   if ! command -v wine &> /dev/null; then
     echo "  [!!] Wine is required and not installed."
-    brew install --cask --no-quarantine gcenx/wine/wine-crossover > /dev/null 2>&1
+    if [ "$REQUIRE_BREW" == "true" ]; then
+      # Install it via Brew if it is MacOS.
+      brew install --cask --no-quarantine gcenx/wine/wine-crossover > /dev/null 2>&1
+    else
+      exit
+    fi
   fi
 
   if ! command -v winetricks &> /dev/null; then
     echo "  [!!] Winetricks is required and not installed."
-    brew install --formula gcenx/wine/winetricks > /dev/null 2>&1
+    if [ "$REQUIRE_BREW" == "true" ]; then
+      # Install it via Brew if it is MacOS.
+      brew install --formula gcenx/wine/winetricks > /dev/null 2>&1
+    else
+      exit
+    fi
   fi
   echo "[++] WINE and WINETRICKS installation good."
 }
@@ -90,7 +104,7 @@ function install_uopatcher
       debug = False
       skip_prompt = True
       verbose = False
-      local_root = ultimaonline
+      local_root = $CLIENT_BASENAME
       remote_root = http://patch.shadowagereborn.com
       remote_port = 2595
 EOF
