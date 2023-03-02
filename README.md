@@ -14,6 +14,7 @@ The **xipl** is a fancy **bash** script designed to automate the **i**nstallatio
 
 - **Perl** - This is used to replace text in some of the registry files for Wine since **sed**'s behaviour is platform dependent.
 - **Git** - Used to download and update additional dependencies.
+- **Python** - Minimum of Python 3 version __**3.9.1**__
 - **Brew** - (MacOS) Used for the installation of WINE and WINETRICKS.
 - **Wine** - Run the ClassicUO client. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
 - **Winetricks** - Download and install additional required packages for Wine. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)

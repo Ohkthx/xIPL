@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 
-WINE_DIR="$HOME/.wine"
+WINE_PREFIX="$HOME/.wine"
+
+UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
+UOPATCHER_CONFIG="./config.ini"
+
+CLIENT_DIR="./ultimaonline/ClassicUO"
+CLIENT="ClassicUO.exe"
+CLIENT_CONFIG="settings.json"
 
 # Checks to make sure WINE is installed, along with its requirements.
-function install_check_wine
+function install_wine
 {
-  echo "[++] Check WINE and WINETRICKS installation."
+  echo "[--] Check WINE and WINETRICKS installation."
   if ! command -v perl &> /dev/null; then
     echo "  [!!] Perl is required and not installed."
     exit
@@ -15,22 +22,25 @@ function install_check_wine
   elif ! command -v brew &> /dev/null; then
     echo "  [!!] Brew is required and not installed."
     exit
+  elif ! command -v python3 &> /dev/null; then
+    echo "  [!!] Python 3 (3.9.1) is required and not installed."
+    exit
   fi
 
   if ! command -v wine &> /dev/null; then
     echo "  [!!] Wine is required and not installed."
-    brew install --cask --no-quarantine gcenx/wine/wine-crossover
+    brew install --cask --no-quarantine gcenx/wine/wine-crossover > /dev/null 2>&1
   fi
 
   if ! command -v winetricks &> /dev/null; then
     echo "  [!!] Winetricks is required and not installed."
-    brew install --formula gcenx/wine/winetricks
+    brew install --formula gcenx/wine/winetricks > /dev/null 2>&1
   fi
   echo "[++] WINE and WINETRICKS installation good."
 }
 
 # Checks to make sure the WINETRICKS packages are installed.
-function install_check_winetricks
+function install_winetricks
 {
   echo "[--] Checking WINETRICKS packages."
   PACKAGES=$(winetricks list-installed)
@@ -39,7 +49,7 @@ function install_check_winetricks
   DOTNET48=$(echo "$PACKAGES" | grep dotnet48)
   if [ -z "$DOTNET48" ]; then
     echo -e "    [!!] 'dotnet48' is missing, installing."
-    winetricks dotnet48
+    winetricks dotnet48 > /dev/null 2>&1
   fi
   echo -e "  [++] Has: 'dotnet48' installed."
 
@@ -47,41 +57,35 @@ function install_check_winetricks
   COREFONTS=$(echo "$PACKAGES" | grep corefonts)
   if [ -z "$COREFONTS" ]; then
     echo -e "    [!!] 'corefonts' is missing, installing."
-    winetricks corefonts
+    winetricks corefonts > /dev/null 2>&1
   fi
   echo -e "  [++] Has: 'corefonts' installed."
   echo -e "[++] WINETRICKS packages are installed."
 }
 
-# Checks to make sure WINE is installed, along with its requirements.
-function install_check_uopatcher
+# Checks to make sure UOPatcher is installed.
+function install_uopatcher
 {
-  echo "[++] Check WINE and WINETRICKS installation."
-  if ! command -v perl &> /dev/null; then
-    echo "  [!!] Perl is required and not installed."
-    exit
+  echo "[--] Checking: UOPatcher installation."
+
+  if [ ! -f "$UOPATCHER_CORE" ]; then
+    echo "  [!!] UOPatcher has not been downloaded."
+    git clone https://github.com/Ohkthx/uopatcher > /dev/null 2>&1
+
+    # Create the configuration
+    { cat << EOF
+      [DEFAULT]
+      debug = False
+      skip_prompt = True
+      verbose = False
+      local_root = ultimaonline
+      remote_root = http://patch.shadowagereborn.com
+      remote_port = 2595
+EOF
+    } > "$UOPATCHER_CONFIG"
   fi
 
-  if ! command -v git &> /dev/null; then
-    echo "  [!!] Git is required and not installed."
-    exit
-  fi
-
-  if ! command -v brew &> /dev/null; then
-    echo "  [!!] Brew is required and not installed."
-    exit
-  fi
-
-  if ! command -v wine &> /dev/null; then
-    echo "  [!!] Wine is required and not installed."
-    brew install --cask --no-quarantine gcenx/wine/wine-crossover
-  fi
-
-  if ! command -v winetricks &> /dev/null; then
-    echo "  [!!] Winetricks is required and not installed."
-    brew install --formula gcenx/wine/winetricks
-  fi
-  echo "[++] WINE and WINETRICKS installation good."
+  echo "[++] UOPatcher installed."
 }
 
 # Validates WINEs Registry.
@@ -89,7 +93,7 @@ function patch_wine_registry
 {
   echo "[--] Checking WINE Registry."
 
-  REG_FILE="$WINE_DIR/user.reg"
+  REG_FILE="$WINE_PREFIX/user.reg"
   NEEDS_INJECT="true"
 
   # Replace the managed setting.
@@ -126,11 +130,60 @@ function patch_wine_registry
   echo "[++] WINE Registry checks completed."
 }
 
+# Patches the local client, installing any missing files.
+function patch_client
+{
+  echo "[--] Patching: Client with UOPatcher."
+
+  if [ ! -f "$UOPATCHER_CORE" ]; then
+    echo "  [!!] UOPatcher has not been downloaded."
+    exit
+  fi
+
+  PYTHON_EXE="python3"
+  if command -v python3.11 &> /dev/null; then
+    PYTHON_EXE="python3.11"
+  elif command -v python3.10 &> /dev/null; then
+    PYTHON_EXE="python3.10"
+  elif command -v python3.9 &> /dev/null; then
+    PYTHON_EXE="python3.9"
+  elif command -v python3 &> /dev/null; then
+    PYTHON_EXE="python3"
+  elif command -v python &> /dev/null; then
+    PYTHON_EXE="python"
+  else
+    echo "  [!!] Could not locate python installation."
+    exit
+  fi
+
+  # Run the patcher.
+  echo -e "\n"
+  $PYTHON_EXE "$UOPATCHER_CORE"
+  echo -e "\n"
+
+  echo "[++] Client patched."
+}
+
+function launch_client
+{
+  echo "[++] Starting client."
+  if [ ! -d "$CLIENT_DIR" ]; then
+    echo "  [!!] Client directory missing, bad installation."
+    exit
+  fi
+
+  cd "$CLIENT_DIR" || exit
+  wine "$CLIENT" -settings "$CLIENT_CONFIG" -force_driver 1 > /dev/null 2>&1
+}
+
 # Step 1: INSTALL, Ensure all files and packages are installed.
-install_check_wine
-install_check_winetricks
+install_wine
+install_winetricks
+install_uopatcher
 
 # Step 2: PATCH, Validate and modify settings/configurations and files.
 patch_wine_registry
+patch_client
 
 # Step 3: LAUNCH, start the client.
+launch_client

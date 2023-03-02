@@ -1,2 +1,7 @@
 *.log
+*.ini
+
 this.commit_msg
+
+uopatcher/
+ultimaonline/
