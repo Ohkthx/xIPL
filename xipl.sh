@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-WINE_PREFIX="$HOME/.wine"
+WINE_PREFIX="$HOME/.wine_ultimaonline"
+WINE_ARCH="win64"
 
 UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
 UOPATCHER_CONFIG="./config.ini"
@@ -12,15 +13,26 @@ CLIENT_CONFIG="settings.json"
 # Checks to make sure WINE is installed, along with its requirements.
 function install_wine
 {
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Detected OS: Linux"
+  elif [[ "$OSTYPE" == "cygwin"* ]]; then
+    echo "Detected OS: Window (Cygwin)"
+  elif [[ "$OSTYPE" == "freebsd"* ]]; then
+    echo "Detected OS: FreeBSD"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Detected OS: MacOS"
+    if ! command -v brew &> /dev/null; then
+      echo "  [!!] Brew is required and not installed."
+      exit
+    fi
+  fi
+
   echo "[--] Check WINE and WINETRICKS installation."
   if ! command -v perl &> /dev/null; then
     echo "  [!!] Perl is required and not installed."
     exit
   elif ! command -v git &> /dev/null; then
     echo "  [!!] Git is required and not installed."
-    exit
-  elif ! command -v brew &> /dev/null; then
-    echo "  [!!] Brew is required and not installed."
     exit
   elif ! command -v python3 &> /dev/null; then
     echo "  [!!] Python 3 (3.9.1) is required and not installed."
@@ -43,13 +55,13 @@ function install_wine
 function install_winetricks
 {
   echo "[--] Checking WINETRICKS packages."
-  PACKAGES=$(winetricks list-installed)
+  PACKAGES=$(WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks list-installed)
 
   echo -e "  [--] Checking: 'dotnet48' installed."
   DOTNET48=$(echo "$PACKAGES" | grep dotnet48)
   if [ -z "$DOTNET48" ]; then
     echo -e "    [!!] 'dotnet48' is missing, installing."
-    winetricks dotnet48 > /dev/null 2>&1
+    WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks dotnet48 > /dev/null 2>&1
   fi
   echo -e "  [++] Has: 'dotnet48' installed."
 
@@ -57,7 +69,7 @@ function install_winetricks
   COREFONTS=$(echo "$PACKAGES" | grep corefonts)
   if [ -z "$COREFONTS" ]; then
     echo -e "    [!!] 'corefonts' is missing, installing."
-    winetricks corefonts > /dev/null 2>&1
+    WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks corefonts > /dev/null 2>&1
   fi
   echo -e "  [++] Has: 'corefonts' installed."
   echo -e "[++] WINETRICKS packages are installed."
@@ -173,7 +185,8 @@ function launch_client
   fi
 
   cd "$CLIENT_DIR" || exit
-  wine "$CLIENT" -settings "$CLIENT_CONFIG" -force_driver 1 > /dev/null 2>&1
+  WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$CLIENT" -settings "$CLIENT_CONFIG" -force_driver 1 > /dev/null 2>&1
+  echo "[++] Stopped client."
 }
 
 # Step 1: INSTALL, Ensure all files and packages are installed.

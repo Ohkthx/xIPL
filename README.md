@@ -5,9 +5,6 @@
 The **xipl** is a fancy **bash** script designed to automate the **i**nstallation, **p**atching, and **l**aunching of Ultima Online. Targeted at the shard Shadow Age: REBORN, this software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
 
 ## TODO
-- Get the **xipl** to a fully functional state in MacOS.
-- Add additional checks for varying environments (OS dependent actions.)
-- Extend fully functional state to other environments.
 - Create a notification system for new **xipl** updates.
 
 ### Requirements
