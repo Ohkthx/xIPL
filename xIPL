@@ -37,10 +37,10 @@ CLENGTH="${CLENGTH//[$'\t\r\n ']}"
 if [[ "$CLENGTH" -gt 256 ]]; then
   case "$PULLER_EXE" in
     curl)
-      curl -O "$REMOTE_EXTRAS"
+      curl -sO "$REMOTE_EXTRAS"
       ;;
     wget)
-      wget "$REMOTE_EXTRAS"
+      wget -q "$REMOTE_EXTRAS"
       ;;
   esac
 
