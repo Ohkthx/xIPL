@@ -17,13 +17,13 @@ function install_wine
   REQUIRE_BREW="false"
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "Detected OS: Linux"
+    echo -e "\n[++] Detected OS: Linux"
   elif [[ "$OSTYPE" == "cygwin"* ]]; then
-    echo "Detected OS: Window (Cygwin)"
+    echo -e "\n[++] Detected OS: Window (Cygwin)"
   elif [[ "$OSTYPE" == "freebsd"* ]]; then
-    echo "Detected OS: FreeBSD"
+    echo -e "\n[++] Detected OS: FreeBSD"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "Detected OS: MacOS"
+    echo -e "\n[++] Detected OS: MacOS"
     REQUIRE_BREW="true"
     if ! command -v brew &> /dev/null; then
       echo "  [!!] Brew is required and not installed."

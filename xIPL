@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+EXTRAS_FILE="xIPL_extras"
+REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
+
+echo "[--] Updating xIPL."
+
+# Check which package we are using to pull the updates.
+PULLER_EXE=""
+if command -v curl &> /dev/null; then
+  PULLER_EXE="curl"
+elif command -v wget &> /dev/null; then
+  PULLER_EXE="wget"
+fi
+
+if [ "$PULLER_EXE" == "" ]; then
+  echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+  exit 1
+fi
+
+# Get the headers of the extras file.
+HEADERS="content-length: 0"
+case "$PULLER_EXE" in
+  curl)
+    HEADERS=$(curl -sI "$REMOTE_EXTRAS")
+    ;;
+  wget)
+    HEADERS=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
+    ;;
+esac
+
+# Extract and clean the content-length of whitespace.
+CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
+CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+
+# Attempt to get the new extras file.
+if [[ "$CLENGTH" -gt 256 ]]; then
+  case "$PULLER_EXE" in
+    curl)
+      curl -O "$REMOTE_EXTRAS"
+      ;;
+    wget)
+      wget "$REMOTE_EXTRAS"
+      ;;
+  esac
+
+  if [ -f "./$EXTRAS_FILE" ]; then
+    echo "[++] Updated xIPL."
+  fi
+else
+  echo "[!!] Could not located remote xIPL Extras file."
+fi
+
+if [ ! -f "./$EXTRAS_FILE" ]; then
+  echo "[!!] Unknown error occurred, could not download updated xIPL."
+  exit
+fi
+
+# Source the updated extras, starts the:
+# installation, patching, and launching.
+. "./$EXTRAS_FILE"
