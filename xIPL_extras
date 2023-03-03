@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
-WINE_PREFIX="$HOME/.wine_ultimaonline"
-WINE_ARCH="win64"
+# Created by: Ohkthx (Schism)
+# Purpose of file: This is responsible for installing, patching,
+#   and launching a ClassicUO Ultima Online client. It has several
+#   requirements that can be seen inside of the README.md file on
+#   the main repo.
 
+# Wine variables for installation directory (WINE_PREFIX), and architecture.
+WINE_PREFIX="$HOME/.wine_ultimaonline"
+WINE_ARCH="win64" # WINE_ARCH has to be win64, ClassicUO is 64-bit.
+
+# Location that the UOPatcher files will be accessible.
 UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
 UOPATCHER_CONFIG="./config.ini"
 
+# Server files and ClassicUO location.
 CLIENT_BASENAME="uoinstall"
 CLIENT_DIR="./$CLIENT_BASENAME/ClassicUO"
 CLIENT="ClassicUO.exe"

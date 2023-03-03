@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Created by: Ohkthx (Schism)
+# Purpose of file: This is a wrapper for all functions inside of
+#   xIPL_extras, that is responsible for keeping that file updated
+#   with the current release available.
+#   If a new update is available, this script downloads and launches it.
+
 EXTRAS_FILE="xIPL_extras"
 REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
 
