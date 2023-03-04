@@ -24,7 +24,7 @@ elif command -v wget &> /dev/null; then
   PULLER_EXE="wget"
 fi
 
-if [ "$PULLER_EXE" == "" ]; then
+if [[ "$PULLER_EXE" == "" ]]; then
   echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
   exit 1
 fi

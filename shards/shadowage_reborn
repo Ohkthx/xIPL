@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 UO_SHARD_NAME="Shadow Age: REBORN"
-UO_SHARD_ROOT="http:/patch.shadowagereborn.com"
+UO_SHARD_ROOT="http://patch.shadowagereborn.com"
 UO_SHARD_PORT="2595"

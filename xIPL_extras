@@ -25,7 +25,7 @@ SHARD_INFO_FILE="./shard_info"
 
 function get_shard_config
 {
-  echo "[--] Pulling Shard '$1' configuration."
+  echo "  [--] Pulling Shard '$1' configuration."
   REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
 
   # Check which package we are using to pull the updates.
@@ -36,19 +36,19 @@ function get_shard_config
     PULLER_EXE="wget"
   fi
 
-  if [ "$PULLER_EXE" == "" ]; then
-    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
-    exit 1
+  if [[ "$PULLER_EXE" == "" ]]; then
+    echo "  [!!] Could not resolve download tool, requires 'curl' or 'wget'"
+    #exit 1
   fi
 
   # Get the headers of the extras file.
   HEADERS="content-length: 0"
   case "$PULLER_EXE" in
     curl)
-      HEADERS=$(curl -sI "$1")
+      HEADERS=$(curl -sI "$REMOTE_RESOURCE")
       ;;
     wget)
-      HEADERS=$(wget -q -S -O - "$1" 2>&1)
+      HEADERS=$(wget -q -S -O - "$REMOTE_RESOURCE" 2>&1)
       ;;
   esac
 
@@ -57,23 +57,24 @@ function get_shard_config
   CLENGTH="${CLENGTH//[$'\t\r\n ']}"
 
   # Attempt to get the new extras file.
-  if [[ "$CLENGTH" -gt 256 ]]; then
+  if [[ "$CLENGTH" -gt 32 ]]; then
     case "$PULLER_EXE" in
       curl)
-        curl -sO "$REMOTE_RESOURCE" "$SHARD_INFO_FILE"
+        curl -so "$SHARD_INFO_FILE" "$REMOTE_RESOURCE"
         ;;
       wget)
         wget -q "$REMOTE_RESOURCE" -O "$SHARD_INFO_FILE"
         ;;
     esac
+
     if [ -f "$SHARD_INFO_FILE" ]; then
-      echo "[++] Pulled Shard '$1' configuration."
+      echo "  [++] Pulled Shard '$1' configuration."
     else
-      echo "[!!] Failed to download Shard '$1' configuration."
+      echo "  [!!] Failed to download Shard '$1' configuration."
       exit
     fi
   else
-    echo "[!!] Could not located remote shard file."
+    echo "  [!!] Could not located remote shard file."
     exit
   fi
 }
@@ -112,7 +113,7 @@ function install_wine
 
   if ! command -v wine &> /dev/null; then
     echo "  [!!] Wine is required and not installed."
-    if [ "$REQUIRE_BREW" == "true" ]; then
+    if [[ "$REQUIRE_BREW" == "true" ]]; then
       # Install it via Brew if it is MacOS.
       brew install --cask --no-quarantine gcenx/wine/wine-crossover > /dev/null 2>&1
     else
@@ -122,7 +123,7 @@ function install_wine
 
   if ! command -v winetricks &> /dev/null; then
     echo "  [!!] Winetricks is required and not installed."
-    if [ "$REQUIRE_BREW" == "true" ]; then
+    if [[ "$REQUIRE_BREW" == "true" ]]; then
       # Install it via Brew if it is MacOS.
       brew install --formula gcenx/wine/winetricks > /dev/null 2>&1
     else
@@ -168,7 +169,6 @@ function install_uopatcher
   fi
 
   # Pull the updated shard configuration.
-  echo "  [++] Pulling Shard Information."
   get_shard_config "$1"
   if [ ! -f "$SHARD_INFO_FILE" ]; then
     echo "  [!!] Shard Information file missing, cannot continue."
@@ -233,7 +233,7 @@ function patch_wine_registry
   echo "  [++] 'Decorated Window Management' is correct."
 
   # Add the registry additions to the end of the file.
-  if [ "$NEEDS_INJECT" == "true" ]; then
+  if [[ "$NEEDS_INJECT" == "true" ]]; then
     echo "  [!!] WINE Registry Injecting to: $REG_FILE"
     { echo -e "\n[Software\\Wine\\X11 Driver]"
       echo '"Managed"="N"'
