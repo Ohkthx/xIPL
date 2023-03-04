@@ -23,9 +23,11 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 - Preserve backup of macro profiles.
 - Persistent settings between patches: ClassicUO/settings.json
 
-## Optional: Configuration
+## Optional: Configuration and Shard Specific Settings
 
-The default configuration for the **xIPL** is aimed at the shard Shadow Age: REBORN. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to message me on discord @Schism#6126 (id: 113426175669313536). Users will then be able to edit line 12 of **xIPL**. Example provided below to assign 'shadowage_reborn' as the shard to use:
+The default configuration for the **xIPL** is aimed at the shard **Shadow Age: REBORN**. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to message me on discord @Schism#6126 (id: 113426175669313536). When messaging me, please __**do not forget**__ include your configuration file. An example can be found [here](https://github.com/Ohkthx/xIPL/blob/main/shards/example). After your configuration is added, users will then be able to edit line 12 of **xIPL** with the name of your configuration. I retain the right to edit or remove any configuration for any reason but that is highly unlikely to ever happen. The most likely scenario is in the event a future patch adds functionality to the **xIPL** and all configurations will need to be updated.
+
+Example provided below to assign the '[example](https://github.com/Ohkthx/xIPL/blob/main/shards/example)' configuration as the **xIPL**'s Shard:
 
 `xIPL`
 ```bash
@@ -40,22 +42,8 @@ The default configuration for the **xIPL** is aimed at the shard Shadow Age: REB
 # Name of the shard to patch for, check out:
 #   https://github.com/Ohkthx/xIPL/tree/main/shards
 # For all valid shard names.
-SHARD_NAME="shadowage_reborn"
+SHARD_NAME="example"
 ```
-
-## Requirements
-
-- **Perl** - This is used to replace text in some of the registry files for Wine since **sed**'s behaviour is platform dependent.
-- **Git** - Used to download and update additional dependencies.
-- **Python** - Minimum of Python 3 version __**3.9.1**__
-- **Brew** - (MacOS) Used for the installation of WINE and WINETRICKS.
-- **curl** or **wget** - Used for auto-updating the xIPL.
-- **Wine** - Run the ClassicUO client. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
-- **Winetricks** - Download and install additional required packages for Wine. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
-
-## Dependencies
-
-- **uopatcher** - Downloaded automatically and used for **patching** of the client, provided by [Ohkthx/uopatcher](https://github.com/ohkthx/uopatcher).
 
 ## Installation
 
@@ -71,8 +59,21 @@ curl -O https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 
 # Obtaining the xIPL with WGET
 wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
-
 ```
+
+#### Requirements
+
+- **Perl** - This is used to replace text in some of the registry files for Wine since **sed**'s behaviour is platform dependent.
+- **Git** - Used to download and update additional dependencies.
+- **Python** - Minimum of Python 3 version __**3.9.1**__
+- **Brew** - (MacOS) Used for the installation of WINE and WINETRICKS.
+- **curl** or **wget** - Used for auto-updating the xIPL.
+- **Wine** - Run the ClassicUO client. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
+- **Winetricks** - Download and install additional required packages for Wine. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
+
+#### Dependencies
+
+- **uopatcher** - Downloaded automatically and used for **patching** of the client, provided by [Ohkthx/uopatcher](https://github.com/ohkthx/uopatcher).
 
 ## Running
 

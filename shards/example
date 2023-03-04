@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# UO_SHARD_NAME - Name of your UO Shard.
+# UO_SHARD_ROOT - Path to access the Manifest and Hashes file.
+# UO_SHARD_PORT - Port to access the patch.
+UO_SHARD_NAME="My UO Shard"
+UO_SHARD_ROOT="http://patch.example.com/patches"
+UO_SHARD_PORT="2595"
+
+
+# UO_SHARD_CLIENT       - Executable / Client to be launched.
+# UO_SHARD_CLIENT_DIR   - Directory relative to UO_SHARD_ROOT 
+#                         hosting the UO_SHARD_CLIENT.
+# UO_SHARD_CLIENT_FLAGS - Any special flags to pass to the
+#                         UO_SHARD_CLIENT at startup.
+UO_SHARD_CLIENT="ClassicUO.exe"
+UO_SHARD_CLIENT_DIR="ClassicUO"
+UO_SHARD_CLIENT_FLAGS="-force_driver 1"
