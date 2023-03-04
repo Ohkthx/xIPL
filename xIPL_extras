@@ -281,15 +281,15 @@ function patch_client
 function launch_client
 {
   echo "[++] Starting client."
-  if [ ! -d "./$UO_SHARD_CLIENT_DIR" ]; then
+  if [ ! -d "./$UO_ROOT/$UO_SHARD_CLIENT_DIR" ]; then
     echo "  [!!] Client directory missing, bad installation."
     exit
-  elif [ ! -f "./$UO_SHARD_CLIENT_DIR/$UO_SHARD_CLIENT" ]; then
+  elif [ ! -f "./$UO_ROOT/$UO_SHARD_CLIENT_DIR/$UO_SHARD_CLIENT" ]; then
     echo "  [!!] Client missing, bad installation."
     exit
   fi
 
-  cd "./$UO_SHARD_CLIENT_DIR" || exit
+  cd "./$UO_ROOT/$UO_SHARD_CLIENT_DIR" || exit
   WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_CLIENT" $UO_SHARD_CLIENT_FLAGS > /dev/null 2>&1
   echo "[++] Stopped client."
 }
