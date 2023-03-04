@@ -11,6 +11,8 @@
 
 The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. This software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
 
+The original patching concept and basis for this project is accredited to [Voxpire](https://github.com/Voxpire) with his [ServUO/IPL](https://www.servuo.com/archive/all-in-one-installer-patcher-launcher-ipl.1724/) project. Unfortunately, the project is limited to Microsoft Windows, thus not supporting the audience of my project.
+
 ## Features
 - Cross-platform, tested in Linux (Intel 64-bit) and MacOS (ARM M2)
 - Configurable to various shards.
@@ -25,11 +27,16 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 
 ## Optional: Configuration and Shard Specific Settings
 
-The default configuration for the **xIPL** is aimed at the shard **Shadow Age: REBORN**. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to message me on discord @Schism#6126 (id: 113426175669313536). When messaging me, please __**do not forget**__ include your configuration file. An example can be found [here](https://github.com/Ohkthx/xIPL/blob/main/shards/example). After your configuration is added, users will then be able to edit line 12 of **xIPL** with the name of your configuration. I retain the right to edit or remove any configuration for any reason but that is highly unlikely to ever happen. The most likely scenario is in the event a future patch adds functionality to the **xIPL** and all configurations will need to be updated.
+The default configuration for the **xIPL** is aimed at the shard **Shadow Age: REBORN**. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to contact me at:
+| Service | Username    | ID                 |
+|:-------:|:-----------:|:------------------:|
+| Discord | Schism#6126 | 113426175669313536 |
+ 
+When messaging me, please __**do not forget**__ include your configuration file. An example can be found [here](https://github.com/Ohkthx/xIPL/blob/main/shards/example). After your configuration is added, users will then be able to edit line 12 of **xIPL** with the name of your configuration. I retain the right to edit or remove any configuration for any reason but that is highly unlikely to ever happen. The most likely scenario is in the event a future patch adds functionality to the **xIPL** and all configurations will need to be updated.
 
 Example provided below to assign the '[example](https://github.com/Ohkthx/xIPL/blob/main/shards/example)' configuration as the **xIPL**'s Shard:
 
-`xIPL`
+File: `xIPL`
 ```bash
 #!/usr/bin/env bash
 
