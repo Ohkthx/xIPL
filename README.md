@@ -9,10 +9,11 @@
 
 # xIPL, Cross-platform (x) Installer, Patcher, and Launcher (IPL)
 
-The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. Targeted at the shard Shadow Age: REBORN, this software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
+The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. This software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
 
 ## Features
 - Cross-platform, tested in Linux (Intel 64-bit) and MacOS (ARM M2)
+- Configurable to various shards.
 - xIPL auto-updates itself.
 - Auto-configures settings.
 - Installs / Patches client
@@ -24,7 +25,27 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 - Preserve backup of macro profiles.
 - Persistent settings between patches: ClassicUO/settings.json
 
-### Requirements
+## Optional: Configuration
+
+The default configuration for the **xIPL** is aimed at the shard Shadow Age: REBORN. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to message me on discord @Schism#6126 (id: 113426175669313536). Users will then be able to edit line 12 of **xIPL**. Example provided below to assign 'shadowage_reborn' as the shard to use:
+
+`xIPL`
+```bash
+#!/usr/bin/env bash
+
+# Created by: Ohkthx (Schism)
+# Purpose of file: This is a wrapper for all functions inside of
+#   xIPL_extras, that is responsible for keeping that file updated
+#   with the current release available.
+#   If a new update is available, this script downloads and launches it.
+
+# Name of the shard to patch for, check out:
+#   https://github.com/Ohkthx/xIPL/tree/main/shards
+# For all valid shard names.
+SHARD_NAME="shadowage_reborn"
+```
+
+## Requirements
 
 - **Perl** - This is used to replace text in some of the registry files for Wine since **sed**'s behaviour is platform dependent.
 - **Git** - Used to download and update additional dependencies.
@@ -34,11 +55,11 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 - **Wine** - Run the ClassicUO client. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
 - **Winetricks** - Download and install additional required packages for Wine. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
 
-### Dependencies
+## Dependencies
 
 - **uopatcher** - Downloaded automatically and used for **patching** of the client, provided by [Ohkthx/uopatcher](https://github.com/ohkthx/uopatcher).
 
-### Installation
+## Installation
 
 It is ideal to store the installation script in its own directory, below provides commands to create that directory in the terminal and switch to it. The method to downloading the client is up to you. You can use **curl**, **wget**, or just copy the raw file from the browser. **curl** and **wget** commands are provided below.
 

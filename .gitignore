@@ -1,7 +1,11 @@
 *.log
 *.ini
+*.bak
 
 this.commit_msg
+shard_info
+bak
+
 
 uopatcher/
 uoinstall/

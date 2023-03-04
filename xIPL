@@ -6,6 +6,11 @@
 #   with the current release available.
 #   If a new update is available, this script downloads and launches it.
 
+# Name of the shard to patch for, check out:
+#   https://github.com/Ohkthx/xIPL/tree/main/shards
+# For all valid shard names.
+SHARD_NAME="shadowage_reborn"
+
 EXTRAS_FILE="xIPL_extras"
 REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
 
@@ -65,3 +70,4 @@ fi
 # Source the updated extras, starts the:
 # installation, patching, and launching.
 . "./$EXTRAS_FILE"
+start_ipl "$SHARD_NAME"

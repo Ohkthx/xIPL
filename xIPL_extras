@@ -20,6 +20,64 @@ CLIENT_DIR="./$CLIENT_BASENAME/ClassicUO"
 CLIENT="ClassicUO.exe"
 CLIENT_CONFIG="settings.json"
 
+# Updating Shard Information
+SHARD_INFO_FILE="./shard_info"
+
+function get_shard_config
+{
+  echo "[--] Pulling Shard '$1' configuration."
+  REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
+
+  # Check which package we are using to pull the updates.
+  PULLER_EXE=""
+  if command -v curl &> /dev/null; then
+    PULLER_EXE="curl"
+  elif command -v wget &> /dev/null; then
+    PULLER_EXE="wget"
+  fi
+
+  if [ "$PULLER_EXE" == "" ]; then
+    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+    exit 1
+  fi
+
+  # Get the headers of the extras file.
+  HEADERS="content-length: 0"
+  case "$PULLER_EXE" in
+    curl)
+      HEADERS=$(curl -sI "$1")
+      ;;
+    wget)
+      HEADERS=$(wget -q -S -O - "$1" 2>&1)
+      ;;
+  esac
+
+  # Extract and clean the content-length of whitespace.
+  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
+  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+
+  # Attempt to get the new extras file.
+  if [[ "$CLENGTH" -gt 256 ]]; then
+    case "$PULLER_EXE" in
+      curl)
+        curl -sO "$REMOTE_RESOURCE" "$SHARD_INFO_FILE"
+        ;;
+      wget)
+        wget -q "$REMOTE_RESOURCE" -O "$SHARD_INFO_FILE"
+        ;;
+    esac
+    if [ -f "$SHARD_INFO_FILE" ]; then
+      echo "[++] Pulled Shard '$1' configuration."
+    else
+      echo "[!!] Failed to download Shard '$1' configuration."
+      exit
+    fi
+  else
+    echo "[!!] Could not located remote shard file."
+    exit
+  fi
+}
+
 # Checks to make sure WINE is installed, along with its requirements.
 function install_wine
 {
@@ -106,21 +164,42 @@ function install_uopatcher
   if [ ! -f "$UOPATCHER_CORE" ]; then
     echo "  [!!] UOPatcher has not been downloaded."
     git clone https://github.com/Ohkthx/uopatcher > /dev/null 2>&1
+    echo "  [++] UOPatcher downloaded."
+  fi
 
+  # Pull the updated shard configuration.
+  echo "  [++] Pulling Shard Information."
+  get_shard_config "$1"
+  if [ ! -f "$SHARD_INFO_FILE" ]; then
+    echo "  [!!] Shard Information file missing, cannot continue."
+    exit
+  fi
+
+  # Load the shard information file
+  . "$SHARD_INFO_FILE"
+
+  if [ -f "$UOPATCHER_CONFIG" ]; then
+    # Update the settings.
+    perl -pi -e "s'^remote_root = .*'remote_root = ${UO_SHARD_ROOT}'g" "$UOPATCHER_CONFIG"
+    perl -pi -e "s'^remote_port = .*'remote_port = ${UO_SHARD_PORT}'g" "$UOPATCHER_CONFIG"
+  else
     # Create the configuration
     { cat << EOF
-      [DEFAULT]
-      debug = False
-      skip_prompt = True
-      verbose = False
-      local_root = $CLIENT_BASENAME
-      remote_root = http://patch.shadowagereborn.com
-      remote_port = 2595
+[DEFAULT]
+debug = False
+skip_prompt = True
+verbose = False
+local_root = $CLIENT_BASENAME
+remote_root = $UO_SHARD_ROOT
+remote_port = $UO_SHARD_PORT
 EOF
     } > "$UOPATCHER_CONFIG"
   fi
 
-  echo "[++] UOPatcher installed."
+  echo -e "[++] UOPatcher installed.\n"
+  echo "[++] Loaded Shard Info: $UO_SHARD_NAME"
+  echo "[++] Shard Remote Root: $UO_SHARD_ROOT"
+  echo -e "[++] Shard Remote Port: $UO_SHARD_PORT\n"
 }
 
 # Validates WINEs Registry.
@@ -212,14 +291,17 @@ function launch_client
   echo "[++] Stopped client."
 }
 
-# Step 1: INSTALL, Ensure all files and packages are installed.
-install_wine
-install_winetricks
-install_uopatcher
+function start_ipl
+{
+  # Step 1: INSTALL, Ensure all files and packages are installed.
+  install_wine
+  install_winetricks
+  install_uopatcher "$1"
 
-# Step 2: PATCH, Validate and modify settings/configurations and files.
-patch_wine_registry
-patch_client
+  # Step 2: PATCH, Validate and modify settings/configurations and files.
+  patch_wine_registry
+  patch_client
 
-# Step 3: LAUNCH, start the client.
-launch_client
+  # Step 3: LAUNCH, start the client.
+  launch_client
+}
