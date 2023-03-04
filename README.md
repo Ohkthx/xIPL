@@ -1,3 +1,12 @@
+<p align="center">
+    <a href="https://patreon.com/ohkthx" title="Donate to this project using Patreon">
+        <img src="https://img.shields.io/badge/patreon-donate-red.svg?style=for-the-badge&logo=patreon"
+            alt="Patreon donate button"></a>
+    <a href="https://ko-fi.com/G2G0J79MY" title="Donate to this project using Ko-fi">
+        <img src="https://img.shields.io/badge/kofi-donate-ffffff.svg?style=for-the-badge&logo=kofi"
+            alt="Buy me a coffee! Ko-fi"></a>
+</p>
+
 # xIPL, Cross-platform (x) Installer, Patcher, and Launcher (IPL)
 
 The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. Targeted at the shard Shadow Age: REBORN, this software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
