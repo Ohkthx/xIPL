@@ -299,13 +299,13 @@ function confirm
 function uninstall
 {
   FILES=(
-    "./xIPL"
-    "./xIPL_extras"
-    "./$UO_ROOT"
-    "$UOPATCHER_ROOT"
-    "$UOPATCHER_CONFIG"
-    "$WINE_PREFIX"
     "$SHARD_INFO_FILE"
+    "$UOPATCHER_CONFIG"
+    "$UOPATCHER_ROOT"
+    "$WINE_PREFIX"
+    "./$UO_ROOT"
+    "./xIPL_extras"
+    "./xIPL"
   )
 
   # Iterate each file, and prompt for deletion.
@@ -379,7 +379,7 @@ function start_ipl
   done
 
   # Pull the updated shard configuration.
-  get_shard_config "$1"
+  get_shard_config "$SHARD_NAME"
   if [ ! -f "$SHARD_INFO_FILE" ]; then
     echo "[!!] Shard Information file missing, cannot continue."
     exit

@@ -83,6 +83,8 @@ done
 # Update the extras file.
 if [[ "$UPDATE_EXTRAS" == "true" ]]; then
   update_extras
+else
+  echo "[!!] Skipping xIPL updating."
 fi
 
 if [ ! -f "./$EXTRAS_FILE" ]; then
