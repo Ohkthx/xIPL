@@ -3,3 +3,7 @@
 UO_SHARD_NAME="Shadow Age: REBORN"
 UO_SHARD_ROOT="http://patch.shadowagereborn.com"
 UO_SHARD_PORT="2595"
+
+UO_SHARD_CLIENT="ClassicUO.exe"
+UO_SHARD_CLIENT_DIR="ClassicUO"
+UO_SHARD_CLIENT_FLAGS="-force_driver 1"

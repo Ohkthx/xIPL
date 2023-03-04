@@ -15,10 +15,10 @@ UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
 UOPATCHER_CONFIG="./config.ini"
 
 # Server files and ClassicUO location.
-CLIENT_BASENAME="uoinstall"
-CLIENT_DIR="./$CLIENT_BASENAME/ClassicUO"
-CLIENT="ClassicUO.exe"
-CLIENT_CONFIG="settings.json"
+UO_ROOT="uoinstall"
+UO_SHARD_CLIENT_DIR="ClassicUO"
+UO_SHARD_CLIENT="ClassicUO.exe"
+UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 
 # Updating Shard Information
 SHARD_INFO_FILE="./shard_info"
@@ -38,7 +38,7 @@ function get_shard_config
 
   if [[ "$PULLER_EXE" == "" ]]; then
     echo "  [!!] Could not resolve download tool, requires 'curl' or 'wget'"
-    #exit 1
+    exit
   fi
 
   # Get the headers of the extras file.
@@ -189,7 +189,7 @@ function install_uopatcher
 debug = False
 skip_prompt = True
 verbose = False
-local_root = $CLIENT_BASENAME
+local_root = $UO_ROOT
 remote_root = $UO_SHARD_ROOT
 remote_port = $UO_SHARD_PORT
 EOF
@@ -281,13 +281,16 @@ function patch_client
 function launch_client
 {
   echo "[++] Starting client."
-  if [ ! -d "$CLIENT_DIR" ]; then
+  if [ ! -d "./$UO_SHARD_CLIENT_DIR" ]; then
     echo "  [!!] Client directory missing, bad installation."
+    exit
+  elif [ ! -f "./$UO_SHARD_CLIENT_DIR/$UO_SHARD_CLIENT" ]; then
+    echo "  [!!] Client missing, bad installation."
     exit
   fi
 
-  cd "$CLIENT_DIR" || exit
-  WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$CLIENT" -settings "$CLIENT_CONFIG" -force_driver 1 > /dev/null 2>&1
+  cd "./$UO_SHARD_CLIENT_DIR" || exit
+  WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_CLIENT" $UO_SHARD_CLIENT_FLAGS > /dev/null 2>&1
   echo "[++] Stopped client."
 }
 
