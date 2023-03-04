@@ -11,7 +11,8 @@ WINE_PREFIX="$HOME/.wine_ultimaonline"
 WINE_ARCH="win64" # WINE_ARCH has to be win64, ClassicUO is 64-bit.
 
 # Location that the UOPatcher files will be accessible.
-UOPATCHER_CORE="./uopatcher/uopatcher/core.py"
+UOPATCHER_ROOT="./uopatcher/uopatcher"
+UOPATCHER_CORE="$UOPATCHER_ROOT/core.py"
 UOPATCHER_CONFIG="./config.ini"
 
 # Server files and ClassicUO location.
@@ -180,6 +181,7 @@ function install_uopatcher
 
   if [ -f "$UOPATCHER_CONFIG" ]; then
     # Update the settings.
+    perl -pi -e "s'^local_root = .*'local_root = ${UO_ROOT}'g" "$UOPATCHER_CONFIG"
     perl -pi -e "s'^remote_root = .*'remote_root = ${UO_SHARD_ROOT}'g" "$UOPATCHER_CONFIG"
     perl -pi -e "s'^remote_port = .*'remote_port = ${UO_SHARD_PORT}'g" "$UOPATCHER_CONFIG"
   else
@@ -294,16 +296,109 @@ function launch_client
   echo "[++] Stopped client."
 }
 
+function confirm
+{
+  read -r -p "Do you wish to continue? [Y/n] " input
+
+  case $input in
+    [yY][eE][sS]|[yY])
+      echo "true"
+      ;;
+    *)
+      echo "false"
+      ;;
+  esac
+}
+
+function uninstall
+{
+  FILES=(
+    "./xIPL"
+    "./xIPL_extras"
+    "./$UO_ROOT"
+    "$UOPATCHER_ROOT"
+    "$UOPATCHER_CONFIG"
+    "$WINE_PREFIX"
+    "$SHARD_INFO_FILE"
+  )
+
+  # Iterate each file, and prompt for deletion.
+  for i in "${FILES[@]}"; do
+    if [ -f "$i" ]; then
+      echo -e "\nRemoving -> $i"
+      REMOVE=$(confirm "$i")
+      if [[ "$REMOVE" == "true" ]]; then
+        rm -rf "$i"
+        echo "  REMOVED -> $i."
+      fi
+    elif [ -d "$i" ]; then
+      echo -e "\nRemoving -> $i"
+      REMOVE=$(confirm "$i")
+      if [[ "$REMOVE" == "true" ]]; then
+        rm -rf "$i"
+        echo "  REMOVED -> $i."
+      fi
+    fi
+  done
+}
+
+function usage
+{
+  echo -e "\n$1 [--skip-patch] [--skip-winetricks] [--uninstall] [--help]"
+  echo -e "\n--help             Shows this message."
+  echo "--uninstall        Uninstalls the xIPL and all associated files."
+  echo "--skip-patch       Skips patching the client."
+  echo "--skip-winetricks  Skips the Winetricks validation."
+
+}
+
 function start_ipl
 {
+  SCRIPT_NAME="$0"
+
+  SHARD_NAME="none"
+  SKIP_PATCH="false"
+  SKIP_WINETRICKS="false"
+
+  # Parse the parameters.
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+      --help)
+        usage "$SCRIPT_NAME"
+        exit
+        ;;
+      --shard)
+        shift
+        SHARD_NAME="$1"
+        shift
+        ;;
+      --uninstall)
+        uninstall
+        exit
+        ;;
+      --skip-patch)
+        shift
+        SKIP_PATCH="true"
+        ;;
+      --skip-winetricks)
+        shift
+        SKIP_WINETRICKS="true"
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+
   # Step 1: INSTALL, Ensure all files and packages are installed.
   install_wine
-  install_winetricks
-  install_uopatcher "$1"
+  if [[ "$SKIP_WINETRICKS" == "false" ]]; then install_winetricks; fi
+  install_uopatcher "$SHARD_NAME"
 
   # Step 2: PATCH, Validate and modify settings/configurations and files.
   patch_wine_registry
-  patch_client
+  if [[ "$SKIP_PATCH" == "false" ]]; then patch_client; fi
 
   # Step 3: LAUNCH, start the client.
   launch_client

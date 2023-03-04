@@ -19,9 +19,7 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 - Installs / Patches client
 - Launches client
 
-## TODO
-- Optimize WINETRICKS package checking or...
-- **-skip** command for Winetricks.
+#### TODO
 - Preserve backup of macro profiles.
 - Persistent settings between patches: ClassicUO/settings.json
 
@@ -76,14 +74,20 @@ wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 
 ```
 
-### Running
+## Running
 
-To start the **xIPL**, you just need to type the following. In additional to normal execution, provided are **OPTIONAL** steps to make the script executable and started with using `./xIPL`
+To start the **xIPL**, you just need to type the following. In additional to normal execution, provided are **ALTERNATIVE** steps to make the script executable and started with using `./xIPL`
 ```bash
 # Start with bash.
 bash xIPL
 
-# OPTIONAL: Make it executable and be able to run with ./xIPL
+# ALTERNATIVE: Make it executable and be able to run with ./xIPL
 chmod +x xIPL
 ./xIPL
+
+# For advanced functionality, check out:
+bash xIPL --help
+
+# OR if flagged as an executable...
+./xIPL --help
 ```

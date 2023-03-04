@@ -70,4 +70,10 @@ fi
 # Source the updated extras, starts the:
 # installation, patching, and launching.
 . "./$EXTRAS_FILE"
-start_ipl "$SHARD_NAME"
+
+# Add the shard as an argument.
+args=("$@")
+args+=("--shard" "$SHARD_NAME")
+
+# Start the wrapped IPL.
+start_ipl "${args[@]}"
