@@ -9,6 +9,7 @@
 # Wine variables for installation directory (WINE_PREFIX), and architecture.
 WINE_PREFIX="$HOME/.wine_ultimaonline"
 WINE_ARCH="win64" # WINE_ARCH has to be win64, ClassicUO is 64-bit.
+WINETRICKS_PACKAGES=("dotnet48" "corefonts") # Some typically required packages.
 
 # Location that the UOPatcher files will be accessible.
 UOPATCHER_ROOT="./uopatcher/uopatcher"
@@ -26,7 +27,7 @@ SHARD_INFO_FILE="./shard_info"
 
 function get_shard_config
 {
-  echo "  [--] Pulling Shard '$1' configuration."
+  echo "[--] Pulling Shard '$1' configuration."
   REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
 
   # Check which package we are using to pull the updates.
@@ -38,7 +39,7 @@ function get_shard_config
   fi
 
   if [[ "$PULLER_EXE" == "" ]]; then
-    echo "  [!!] Could not resolve download tool, requires 'curl' or 'wget'"
+    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
     exit
   fi
 
@@ -69,13 +70,13 @@ function get_shard_config
     esac
 
     if [ -f "$SHARD_INFO_FILE" ]; then
-      echo "  [++] Pulled Shard '$1' configuration."
+      echo "[++] Pulled Shard '$1' configuration."
     else
-      echo "  [!!] Failed to download Shard '$1' configuration."
+      echo "[!!] Failed to download Shard '$1' configuration."
       exit
     fi
   else
-    echo "  [!!] Could not located remote shard file."
+    echo "[!!] Could not located remote shard file."
     exit
   fi
 }
@@ -140,21 +141,16 @@ function install_winetricks
   echo "[--] Checking WINETRICKS packages."
   PACKAGES=$(WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks list-installed)
 
-  echo -e "  [--] Checking: 'dotnet48' installed."
-  DOTNET48=$(echo "$PACKAGES" | grep dotnet48)
-  if [ -z "$DOTNET48" ]; then
-    echo -e "    [!!] 'dotnet48' is missing, installing."
-    WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks dotnet48 > /dev/null 2>&1
-  fi
-  echo -e "  [++] Has: 'dotnet48' installed."
+  for package in "${WINETRICKS_PACKAGES[@]}"; do
+    echo -e "  [--] Checking: '$package' installed."
+    DETECTED_PACKAGE=$(echo "$PACKAGES" | grep "$package")
+    if [ -z "$DETECTED_PACKAGE" ]; then
+      echo -e "    [!!] '$package' is missing, installing."
+      WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks "$package" > /dev/null 2>&1
+    fi
+    echo -e "  [++] Has: '$package' installed."
+  done
 
-  echo -e "  [--] Checking: 'corefonts' installed."
-  COREFONTS=$(echo "$PACKAGES" | grep corefonts)
-  if [ -z "$COREFONTS" ]; then
-    echo -e "    [!!] 'corefonts' is missing, installing."
-    WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks corefonts > /dev/null 2>&1
-  fi
-  echo -e "  [++] Has: 'corefonts' installed."
   echo -e "[++] WINETRICKS packages are installed."
 }
 
@@ -168,16 +164,6 @@ function install_uopatcher
     git clone https://github.com/Ohkthx/uopatcher > /dev/null 2>&1
     echo "  [++] UOPatcher downloaded."
   fi
-
-  # Pull the updated shard configuration.
-  get_shard_config "$1"
-  if [ ! -f "$SHARD_INFO_FILE" ]; then
-    echo "  [!!] Shard Information file missing, cannot continue."
-    exit
-  fi
-
-  # Load the shard information file
-  . "$SHARD_INFO_FILE"
 
   if [ -f "$UOPATCHER_CONFIG" ]; then
     # Update the settings.
@@ -344,11 +330,12 @@ function uninstall
 
 function usage
 {
-  echo -e "\n$1 [--skip-patch] [--skip-winetricks] [--uninstall] [--help]"
-  echo -e "\n--help             Shows this message."
-  echo "--uninstall        Uninstalls the xIPL and all associated files."
-  echo "--skip-patch       Skips patching the client."
-  echo "--skip-winetricks  Skips the Winetricks validation."
+  echo -e "\n$1 [--no-patch] [--no-winetricks] [--uninstall] [--help]"
+  echo -e "\n--help           Shows this message."
+  echo "--uninstall      Uninstalls the xIPL and all associated files."
+  echo "--no-patch       Skips patching the client."
+  echo "--no-update      Skips updating the xIPL_extras file."
+  echo "--no-winetricks  Skips the Winetricks validation."
 
 }
 
@@ -377,11 +364,11 @@ function start_ipl
         uninstall
         exit
         ;;
-      --skip-patch)
+      --no-patch)
         shift
         SKIP_PATCH="true"
         ;;
-      --skip-winetricks)
+      --no-winetricks)
         shift
         SKIP_WINETRICKS="true"
         ;;
@@ -390,6 +377,16 @@ function start_ipl
         ;;
     esac
   done
+
+  # Pull the updated shard configuration.
+  get_shard_config "$1"
+  if [ ! -f "$SHARD_INFO_FILE" ]; then
+    echo "[!!] Shard Information file missing, cannot continue."
+    exit
+  fi
+
+  # Load the shard information file
+  . "$SHARD_INFO_FILE"
 
   # Step 1: INSTALL, Ensure all files and packages are installed.
   install_wine

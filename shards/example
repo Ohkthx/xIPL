@@ -16,3 +16,7 @@ UO_SHARD_PORT="2595"
 UO_SHARD_CLIENT="ClassicUO.exe"
 UO_SHARD_CLIENT_DIR="ClassicUO"
 UO_SHARD_CLIENT_FLAGS="-force_driver 1"
+
+# WINETRICKS_PACKAGES - Packages Winetricks needs to install to
+#                       run the client successfully with Wine.
+WINETRICKS_PACKAGES=("dotnet48" "corefonts")

@@ -14,52 +14,75 @@ SHARD_NAME="shadowage_reborn"
 EXTRAS_FILE="xIPL_extras"
 REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
 
-echo "[--] Updating xIPL."
+function update_extras
+{
+  echo "[--] Updating xIPL."
 
-# Check which package we are using to pull the updates.
-PULLER_EXE=""
-if command -v curl &> /dev/null; then
-  PULLER_EXE="curl"
-elif command -v wget &> /dev/null; then
-  PULLER_EXE="wget"
-fi
+  # Check which package we are using to pull the updates.
+  PULLER_EXE=""
+  if command -v curl &> /dev/null; then
+    PULLER_EXE="curl"
+  elif command -v wget &> /dev/null; then
+    PULLER_EXE="wget"
+  fi
 
-if [[ "$PULLER_EXE" == "" ]]; then
-  echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
-  exit 1
-fi
+  if [[ "$PULLER_EXE" == "" ]]; then
+    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+    exit 1
+  fi
 
-# Get the headers of the extras file.
-HEADERS="content-length: 0"
-case "$PULLER_EXE" in
-  curl)
-    HEADERS=$(curl -sI "$REMOTE_EXTRAS")
-    ;;
-  wget)
-    HEADERS=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
-    ;;
-esac
-
-# Extract and clean the content-length of whitespace.
-CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
-CLENGTH="${CLENGTH//[$'\t\r\n ']}"
-
-# Attempt to get the new extras file.
-if [[ "$CLENGTH" -gt 256 ]]; then
+  # Get the headers of the extras file.
+  HEADERS="content-length: 0"
   case "$PULLER_EXE" in
     curl)
-      curl -sO "$REMOTE_EXTRAS"
+      HEADERS=$(curl -sI "$REMOTE_EXTRAS")
       ;;
     wget)
-      wget -q "$REMOTE_EXTRAS"
+      HEADERS=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
       ;;
   esac
 
-  if [ -f "./$EXTRAS_FILE" ]; then
-    echo "[++] Updated xIPL."
+  # Extract and clean the content-length of whitespace.
+  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
+  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+
+  # Attempt to get the new extras file.
+  if [[ "$CLENGTH" -gt 256 ]]; then
+    case "$PULLER_EXE" in
+      curl)
+        curl -sO "$REMOTE_EXTRAS"
+        ;;
+      wget)
+        wget -q "$REMOTE_EXTRAS"
+        ;;
+    esac
+
+    if [ -f "./$EXTRAS_FILE" ]; then
+      echo "[++] Updated xIPL."
+    fi
+  else
+    echo "[!!] Could not located remote xIPL Extras file."
   fi
-else
-  echo "[!!] Could not located remote xIPL Extras file."
+}
+
+UPDATE_EXTRAS="true"
+
+# Parse the parameters, specifically for --no-update.
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    --no-update)
+      UPDATE_EXTRAS="false"
+      break
+      ;;
+    *)
+      ;;
+  esac
+done
+
+# Update the extras file.
+if [[ "$UPDATE_EXTRAS" == "true" ]]; then
+  update_extras
 fi
 
 if [ ! -f "./$EXTRAS_FILE" ]; then
