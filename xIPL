@@ -68,17 +68,11 @@ function update_extras
 UPDATE_EXTRAS="true"
 
 # Parse the parameters, specifically for --no-update.
-while [[ $# -gt 0 ]]; do
-  key="$1"
-  case $key in
-    --no-update)
-      UPDATE_EXTRAS="false"
-      break
-      ;;
-    *)
-      shift
-      ;;
-  esac
+for key in "${@}"; do
+  if [[ "$key" == "--no-update" ]]; then
+    UPDATE_EXTRAS="false"
+    break
+  fi
 done
 
 # Update the extras file.

@@ -222,17 +222,18 @@ function patch_uopatcher
     return
   fi
 
+  # Should not be able to trigger this.
   if [ ! -d "$UOPATCHER_ROOT" ]; then
     echo "  [!!] UOPatcher should be installed but is not."
     exit 1
   fi
 
-  CWD=$(pwd)
 
   # Check and pull the update if it exists.
   $PYTHON_EXE "$UOPATCHER_CORE" --has-update
   if [[ "$?" == "1" ]]; then
     echo "  [--] UOPatcher requires an update. Updating..."
+    CWD=$(pwd)
     cd "$UOPATCHER_ROOT" || exit
     git pull > /dev/null 2>&1
     cd "$CWD" || exit
