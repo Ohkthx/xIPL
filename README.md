@@ -23,7 +23,6 @@ The original patching concept and basis for this project is accredited to [Voxpi
 
 #### TODO
 - Preserve backup of macro profiles.
-- Persistent settings between patches: ClassicUO/settings.json
 
 ## Optional: Configuration and Shard Specific Settings
 

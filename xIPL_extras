@@ -230,18 +230,21 @@ function patch_uopatcher
 
 
   # Check and pull the update if it exists.
-  $PYTHON_EXE "$UOPATCHER_CORE" --has-update
-  if [[ "$?" == "1" ]]; then
+  UOPATCHER_LVERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
+  UOPATCHER_RVERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --has-update)
+
+  if [[ "$UOPATCHER_LVERSION" < "$UOPATCHER_RVERSION" ]]; then
     echo "  [--] UOPatcher requires an update. Updating..."
     CWD=$(pwd)
     cd "$UOPATCHER_ROOT" || exit
     git pull > /dev/null 2>&1
     cd "$CWD" || exit
+
+    UOPATCHER_LVERSION="$UOPATCHER_RVERSION"
     echo "  [++] UOPatcher updated."
   fi
 
-  UOPATCHER_VERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
-  echo "[++] UOPatcher check complete, current version: $UOPATCHER_VERSION."
+  echo "[++] UOPatcher check complete, current version: $UOPATCHER_LVERSION."
 }
 
 
