@@ -12,8 +12,9 @@ WINE_ARCH="win64" # WINE_ARCH has to be win64, ClassicUO is 64-bit.
 WINETRICKS_PACKAGES=("dotnet48" "corefonts") # Some typically required packages.
 
 # Location that the UOPatcher files will be accessible.
-UOPATCHER_ROOT="./uopatcher/uopatcher"
-UOPATCHER_CORE="$UOPATCHER_ROOT/core.py"
+UOPATCHER_ROOT="./uopatcher"
+UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
+UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
 UOPATCHER_CONFIG="./config.ini"
 
 # Server files and ClassicUO location.
@@ -25,61 +26,22 @@ UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 # Updating Shard Information
 SHARD_INFO_FILE="./shard_info"
 
-function get_shard_config
-{
-  echo "[--] Pulling Shard '$1' configuration."
-  REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
+PYTHON_EXE="python3"
+if command -v python3.11 &> /dev/null; then
+  PYTHON_EXE="python3.11"
+elif command -v python3.10 &> /dev/null; then
+  PYTHON_EXE="python3.10"
+elif command -v python3.9 &> /dev/null; then
+  PYTHON_EXE="python3.9"
+elif command -v python3 &> /dev/null; then
+  PYTHON_EXE="python3"
+elif command -v python &> /dev/null; then
+  PYTHON_EXE="python"
+else
+  echo "[!!] Could not locate python installation."
+  exit
+fi
 
-  # Check which package we are using to pull the updates.
-  PULLER_EXE=""
-  if command -v curl &> /dev/null; then
-    PULLER_EXE="curl"
-  elif command -v wget &> /dev/null; then
-    PULLER_EXE="wget"
-  fi
-
-  if [[ "$PULLER_EXE" == "" ]]; then
-    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
-    exit
-  fi
-
-  # Get the headers of the extras file.
-  HEADERS="content-length: 0"
-  case "$PULLER_EXE" in
-    curl)
-      HEADERS=$(curl -sI "$REMOTE_RESOURCE")
-      ;;
-    wget)
-      HEADERS=$(wget -q -S -O - "$REMOTE_RESOURCE" 2>&1)
-      ;;
-  esac
-
-  # Extract and clean the content-length of whitespace.
-  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
-  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
-
-  # Attempt to get the new extras file.
-  if [[ "$CLENGTH" -gt 32 ]]; then
-    case "$PULLER_EXE" in
-      curl)
-        curl -so "$SHARD_INFO_FILE" "$REMOTE_RESOURCE"
-        ;;
-      wget)
-        wget -q "$REMOTE_RESOURCE" -O "$SHARD_INFO_FILE"
-        ;;
-    esac
-
-    if [ -f "$SHARD_INFO_FILE" ]; then
-      echo "[++] Pulled Shard '$1' configuration."
-    else
-      echo "[!!] Failed to download Shard '$1' configuration."
-      exit
-    fi
-  else
-    echo "[!!] Could not located remote shard file."
-    exit
-  fi
-}
 
 # Checks to make sure WINE is installed, along with its requirements.
 function install_wine
@@ -135,6 +97,7 @@ function install_wine
   echo "[++] WINE and WINETRICKS installation good."
 }
 
+
 # Checks to make sure the WINETRICKS packages are installed.
 function install_winetricks
 {
@@ -153,6 +116,7 @@ function install_winetricks
 
   echo -e "[++] WINETRICKS packages are installed."
 }
+
 
 # Checks to make sure UOPatcher is installed.
 function install_uopatcher
@@ -189,6 +153,96 @@ EOF
   echo "[++] Shard Remote Root: $UO_SHARD_ROOT"
   echo -e "[++] Shard Remote Port: $UO_SHARD_PORT\n"
 }
+
+
+function patch_shard_info
+{
+  echo "[--] Pulling Shard '$1' configuration."
+  REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
+
+  # Check which package we are using to pull the updates.
+  PULLER_EXE=""
+  if command -v curl &> /dev/null; then
+    PULLER_EXE="curl"
+  elif command -v wget &> /dev/null; then
+    PULLER_EXE="wget"
+  fi
+
+  if [[ "$PULLER_EXE" == "" ]]; then
+    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+    exit
+  fi
+
+  # Get the headers of the extras file.
+  HEADERS="content-length: 0"
+  case "$PULLER_EXE" in
+    curl)
+      HEADERS=$(curl -sI "$REMOTE_RESOURCE")
+      ;;
+    wget)
+      HEADERS=$(wget -q -S -O - "$REMOTE_RESOURCE" 2>&1)
+      ;;
+  esac
+
+  # Extract and clean the content-length of whitespace.
+  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
+  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+
+  # Attempt to get the new extras file.
+  if [[ "$CLENGTH" -gt 32 ]]; then
+    case "$PULLER_EXE" in
+      curl)
+        curl -so "$SHARD_INFO_FILE" "$REMOTE_RESOURCE"
+        ;;
+      wget)
+        wget -q "$REMOTE_RESOURCE" -O "$SHARD_INFO_FILE"
+        ;;
+    esac
+
+    if [ -f "$SHARD_INFO_FILE" ]; then
+      echo "[++] Pulled Shard '$1' configuration."
+    else
+      echo "[!!] Failed to download Shard '$1' configuration."
+      exit
+    fi
+  else
+    echo "[!!] Could not located remote shard file."
+    exit
+  fi
+
+}
+
+
+function patch_uopatcher
+{
+  echo "[--] Checking: UOPatcher Updates."
+
+  if [ ! -f "$UOPATCHER_CORE" ]; then
+    install_uopatcher "$1"
+    return
+  fi
+
+  if [ ! -d "$UOPATCHER_ROOT" ]; then
+    echo "  [!!] UOPatcher should be installed but is not."
+    exit 1
+  fi
+
+  CWD=$(pwd)
+
+  # Check and pull the update if it exists.
+  $PYTHON_EXE "$UOPATCHER_CORE" --has-update
+  if [[ "$?" == "1" ]]; then
+    echo "  [--] UOPatcher requires an update. Updating..."
+    cd "$UOPATCHER_ROOT" || exit
+    git pull > /dev/null 2>&1
+    cd "$CWD" || exit
+    echo "  [++] UOPatcher updated."
+  fi
+
+  UOPATCHER_VERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
+  echo "[++] UOPatcher check complete, current version: $UOPATCHER_VERSION."
+}
+
 
 # Validates WINEs Registry.
 function patch_wine_registry
@@ -232,6 +286,7 @@ function patch_wine_registry
   echo "[++] WINE Registry checks completed."
 }
 
+
 # Patches the local client, installing any missing files.
 function patch_client
 {
@@ -242,22 +297,6 @@ function patch_client
     exit
   fi
 
-  PYTHON_EXE="python3"
-  if command -v python3.11 &> /dev/null; then
-    PYTHON_EXE="python3.11"
-  elif command -v python3.10 &> /dev/null; then
-    PYTHON_EXE="python3.10"
-  elif command -v python3.9 &> /dev/null; then
-    PYTHON_EXE="python3.9"
-  elif command -v python3 &> /dev/null; then
-    PYTHON_EXE="python3"
-  elif command -v python &> /dev/null; then
-    PYTHON_EXE="python"
-  else
-    echo "  [!!] Could not locate python installation."
-    exit
-  fi
-
   # Run the patcher.
   echo -e "\n"
   $PYTHON_EXE "$UOPATCHER_CORE"
@@ -265,6 +304,7 @@ function patch_client
 
   echo "[++] Client patched."
 }
+
 
 function launch_client
 {
@@ -282,6 +322,7 @@ function launch_client
   echo "[++] Stopped client."
 }
 
+
 function confirm
 {
   read -r -p "Do you wish to continue? [Y/n] " input
@@ -295,6 +336,7 @@ function confirm
       ;;
   esac
 }
+
 
 function uninstall
 {
@@ -328,6 +370,7 @@ function uninstall
   done
 }
 
+
 function usage
 {
   echo -e "\n$1 [--no-patch] [--no-winetricks] [--uninstall] [--help]"
@@ -338,6 +381,7 @@ function usage
   echo "--no-winetricks  Skips the Winetricks validation."
 
 }
+
 
 function start_ipl
 {
@@ -379,7 +423,7 @@ function start_ipl
   done
 
   # Pull the updated shard configuration.
-  get_shard_config "$SHARD_NAME"
+  patch_shard_info "$SHARD_NAME"
   if [ ! -f "$SHARD_INFO_FILE" ]; then
     echo "[!!] Shard Information file missing, cannot continue."
     exit
@@ -394,6 +438,7 @@ function start_ipl
   install_uopatcher "$SHARD_NAME"
 
   # Step 2: PATCH, Validate and modify settings/configurations and files.
+  patch_uopatcher "$SHARD_NAME"
   patch_wine_registry
   if [[ "$SKIP_PATCH" == "false" ]]; then patch_client; fi
 

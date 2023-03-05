@@ -76,6 +76,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     *)
+      shift
       ;;
   esac
 done
