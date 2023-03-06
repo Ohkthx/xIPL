@@ -7,24 +7,25 @@
 #   the main repo.
 
 # Wine variables for installation directory (WINE_PREFIX), and architecture.
-WINE_PREFIX="$HOME/.wine_ultimaonline"
+WINE_PREFIX="$HOME/.wine64_ultimaonline"
 WINE_ARCH="win64" # WINE_ARCH has to be win64, ClassicUO is 64-bit.
 WINETRICKS_PACKAGES=("dotnet48" "corefonts") # Some typically required packages.
 
 # Location that the UOPatcher files will be accessible.
-UOPATCHER_ROOT="./uopatcher"
+UOPATCHER_REMOTE="https://github.com/Ohkthx/uopatcher"
+UOPATCHER_ROOT="$WINE_PREFIX/drive_c/Program Files/uopatcher"
 UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
 UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
-UOPATCHER_CONFIG="./config.ini"
+UOPATCHER_CONFIG="$UOPATCHER_ROOT/config.ini"
 
 # Server files and ClassicUO location.
-UO_ROOT="uoinstall"
+UO_ROOT="$WINE_PREFIX/drive_c/Program Files/Ultima Online"
 UO_SHARD_CLIENT_DIR="ClassicUO"
 UO_SHARD_CLIENT="ClassicUO.exe"
 UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 
 # Updating Shard Information
-SHARD_INFO_FILE="./shard_info"
+SHARD_INFO_FILE="$TMPDIR/shard_info"
 
 PYTHON_EXE="python3"
 if command -v python3.11 &> /dev/null; then
@@ -44,9 +45,8 @@ fi
 
 
 # Checks to make sure WINE is installed, along with its requirements.
-function install_wine
-{
-  REQUIRE_BREW="false"
+install_wine() {
+  local require_brew="false"
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo -e "\n[++] Detected OS: Linux"
@@ -56,7 +56,7 @@ function install_wine
     echo -e "\n[++] Detected OS: FreeBSD"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo -e "\n[++] Detected OS: MacOS"
-    REQUIRE_BREW="true"
+    require_brew="true"
     if ! command -v brew &> /dev/null; then
       echo "  [!!] Brew is required and not installed."
       exit
@@ -77,7 +77,7 @@ function install_wine
 
   if ! command -v wine &> /dev/null; then
     echo "  [!!] Wine is required and not installed."
-    if [[ "$REQUIRE_BREW" == "true" ]]; then
+    if [[ "$require_brew" == "true" ]]; then
       # Install it via Brew if it is MacOS.
       brew install --cask --no-quarantine gcenx/wine/wine-crossover > /dev/null 2>&1
     else
@@ -87,7 +87,7 @@ function install_wine
 
   if ! command -v winetricks &> /dev/null; then
     echo "  [!!] Winetricks is required and not installed."
-    if [[ "$REQUIRE_BREW" == "true" ]]; then
+    if [[ "$require_brew" == "true" ]]; then
       # Install it via Brew if it is MacOS.
       brew install --formula gcenx/wine/winetricks > /dev/null 2>&1
     else
@@ -99,15 +99,16 @@ function install_wine
 
 
 # Checks to make sure the WINETRICKS packages are installed.
-function install_winetricks
-{
+install_winetricks() {
   echo "[--] Checking WINETRICKS packages."
-  PACKAGES=$(WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks list-installed)
+  local packages
+  packages=$(WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks list-installed)
 
   for package in "${WINETRICKS_PACKAGES[@]}"; do
     echo -e "  [--] Checking: '$package' installed."
-    DETECTED_PACKAGE=$(echo "$PACKAGES" | grep "$package")
-    if [ -z "$DETECTED_PACKAGE" ]; then
+    local detected_package
+    detected_package=$(echo "$packages" | grep "$package")
+    if [ -z "$detected_package" ]; then
       echo -e "    [!!] '$package' is missing, installing."
       WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks "$package" > /dev/null 2>&1
     fi
@@ -119,13 +120,14 @@ function install_winetricks
 
 
 # Checks to make sure UOPatcher is installed.
-function install_uopatcher
-{
+install_uopatcher() {
   echo "[--] Checking: UOPatcher installation."
+
+  local shard_name="$1"
 
   if [ ! -f "$UOPATCHER_CORE" ]; then
     echo "  [!!] UOPatcher has not been downloaded."
-    git clone https://github.com/Ohkthx/uopatcher > /dev/null 2>&1
+    git clone "$UOPATCHER_REMOTE" "$UOPATCHER_ROOT"> /dev/null 2>&1
     echo "  [++] UOPatcher downloaded."
   fi
 
@@ -149,53 +151,53 @@ EOF
   fi
 
   echo -e "[++] UOPatcher installed.\n"
-  echo "[++] Loaded Shard Info: $UO_SHARD_NAME"
+  echo "[++] Loaded Shard Info: $shard_name"
   echo "[++] Shard Remote Root: $UO_SHARD_ROOT"
   echo -e "[++] Shard Remote Port: $UO_SHARD_PORT\n"
 }
 
 
-function patch_shard_info
-{
+patch_shard_info() {
   echo "[--] Pulling Shard '$1' configuration."
-  REMOTE_RESOURCE="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
+  local resource="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
 
   # Check which package we are using to pull the updates.
-  PULLER_EXE=""
+  local puller_exe=""
   if command -v curl &> /dev/null; then
-    PULLER_EXE="curl"
+    puller_exe="curl"
   elif command -v wget &> /dev/null; then
-    PULLER_EXE="wget"
+    puller_exe="wget"
   fi
 
-  if [[ "$PULLER_EXE" == "" ]]; then
+  if [[ "$puller_exe" == "" ]]; then
     echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
     exit
   fi
 
   # Get the headers of the extras file.
-  HEADERS="content-length: 0"
-  case "$PULLER_EXE" in
+  local headers="content-length: 0"
+  case "$puller_exe" in
     curl)
-      HEADERS=$(curl -sI "$REMOTE_RESOURCE")
+      headers=$(curl -sI "$resource")
       ;;
     wget)
-      HEADERS=$(wget -q -S -O - "$REMOTE_RESOURCE" 2>&1)
+      headers=$(wget -q -S -O - "$resource" 2>&1)
       ;;
   esac
 
   # Extract and clean the content-length of whitespace.
-  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
-  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+  local clength=0
+  clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
+  clength="${clength//[$'\t\r\n ']}"
 
   # Attempt to get the new extras file.
-  if [[ "$CLENGTH" -gt 32 ]]; then
-    case "$PULLER_EXE" in
+  if [[ "$clength" -gt 32 ]]; then
+    case "$puller_exe" in
       curl)
-        curl -so "$SHARD_INFO_FILE" "$REMOTE_RESOURCE"
+        curl -so "$SHARD_INFO_FILE" "$resource"
         ;;
       wget)
-        wget -q "$REMOTE_RESOURCE" -O "$SHARD_INFO_FILE"
+        wget -q "$resource" -O "$SHARD_INFO_FILE"
         ;;
     esac
 
@@ -213,8 +215,7 @@ function patch_shard_info
 }
 
 
-function patch_uopatcher
-{
+patch_uopatcher() {
   echo "[--] Checking: UOPatcher Updates."
 
   if [ ! -f "$UOPATCHER_CORE" ]; then
@@ -230,61 +231,65 @@ function patch_uopatcher
 
 
   # Check and pull the update if it exists.
-  UOPATCHER_LVERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
-  UOPATCHER_RVERSION=$($PYTHON_EXE "$UOPATCHER_CORE" --has-update)
+  local lversion
+  local rversion
+  lversion=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
+  rversion=$($PYTHON_EXE "$UOPATCHER_CORE" --has-update)
 
-  if [[ "$UOPATCHER_LVERSION" < "$UOPATCHER_RVERSION" ]]; then
+  if [[ "$lversion" < "$rversion" ]]; then
     echo "  [--] UOPatcher requires an update. Updating..."
     CWD=$(pwd)
     cd "$UOPATCHER_ROOT" || exit
     git pull > /dev/null 2>&1
     cd "$CWD" || exit
 
-    UOPATCHER_LVERSION="$UOPATCHER_RVERSION"
+    lversion="$rversion"
     echo "  [++] UOPatcher updated."
   fi
 
-  echo "[++] UOPatcher check complete, current version: $UOPATCHER_LVERSION."
+  echo "[++] UOPatcher check complete, current version: $lversion."
 }
 
 
 # Validates WINEs Registry.
-function patch_wine_registry
-{
+patch_wine_registry() {
   echo "[--] Checking WINE Registry."
 
-  REG_FILE="$WINE_PREFIX/user.reg"
-  NEEDS_INJECT="true"
+  local reg_file="$WINE_PREFIX/user.reg"
+  local needs_inject="true"
+
+  local managed_set
+  local decorated_set
 
   # Replace the managed setting.
   echo "  [--] Checking if MANAGED is set."
-  MANAGED_SET=$(grep -a10 "X11 Driver" "$REG_FILE" | grep "Managed")
-  if [ -n "$MANAGED_SET" ]; then
+  managed_set=$(grep -a10 "X11 Driver" "$reg_file" | grep "Managed")
+  if [ -n "$managed_set" ]; then
     # Edit the registry to "N" if it is "Y"
-    NEEDS_INJECT="false"
+    needs_inject="false"
     echo "    [!!] Setting 'Managed Window Management' to OFF."
-    perl -pi -e 's/"Managed"="Y"/"Managed"="N"/g' "$REG_FILE"
+    perl -pi -e 's/"Managed"="Y"/"Managed"="N"/g' "$reg_file"
   fi
   echo "  [++] 'Managed Window Management' is correct."
 
   # Replace the decorated setting.
   echo "  [--] Checking if DECORATED is set."
-  DECORATED_SET=$(grep -a10 "X11 Driver" "$REG_FILE" | grep "Decorated")
-  if [ -n "$DECORATED_SET" ]; then
+  decorated_set=$(grep -a10 "X11 Driver" "$reg_file" | grep "Decorated")
+  if [ -n "$decorated_set" ]; then
     # Edit the registry to "N" if it is "Y"
-    NEEDS_INJECT="false"
+    needs_inject="false"
     echo "    [!!] Setting 'Decorated Window Management' to OFF."
-    perl -pi -e 's/"Decorated"="Y"/"Decorated"="N"/g' "$REG_FILE"
+    perl -pi -e 's/"Decorated"="Y"/"Decorated"="N"/g' "$reg_file"
   fi
   echo "  [++] 'Decorated Window Management' is correct."
 
   # Add the registry additions to the end of the file.
-  if [[ "$NEEDS_INJECT" == "true" ]]; then
-    echo "  [!!] WINE Registry Injecting to: $REG_FILE"
+  if [[ "$needs_inject" == "true" ]]; then
+    echo "  [!!] WINE Registry Injecting to: $reg_file"
     { echo -e "\n[Software\\Wine\\X11 Driver]"
       echo '"Managed"="N"'
       echo '"Decorated"="N"'
-    } >> "$REG_FILE"
+    } >> "$reg_file"
     echo "  [++] WINE Registry Injecting completed."
   fi
   echo "[++] WINE Registry checks completed."
@@ -292,8 +297,7 @@ function patch_wine_registry
 
 
 # Patches the local client, installing any missing files.
-function patch_client
-{
+patch_client() {
   echo "[--] Patching: Client with UOPatcher."
 
   if [ ! -f "$UOPATCHER_CORE" ]; then
@@ -303,32 +307,30 @@ function patch_client
 
   # Run the patcher.
   echo -e "\n"
-  $PYTHON_EXE "$UOPATCHER_CORE"
+  $PYTHON_EXE "$UOPATCHER_CORE" --config "$UOPATCHER_CONFIG"
   echo -e "\n"
 
   echo "[++] Client patched."
 }
 
 
-function launch_client
-{
+launch_client() {
   echo "[++] Starting client."
-  if [ ! -d "./$UO_ROOT/$UO_SHARD_CLIENT_DIR" ]; then
+  if [ ! -d "$UO_ROOT/$UO_SHARD_CLIENT_DIR" ]; then
     echo "  [!!] Client directory missing, bad installation."
     exit
-  elif [ ! -f "./$UO_ROOT/$UO_SHARD_CLIENT_DIR/$UO_SHARD_CLIENT" ]; then
+  elif [ ! -f "$UO_ROOT/$UO_SHARD_CLIENT_DIR/$UO_SHARD_CLIENT" ]; then
     echo "  [!!] Client missing, bad installation."
     exit
   fi
 
-  cd "./$UO_ROOT/$UO_SHARD_CLIENT_DIR" || exit
+  cd "$UO_ROOT/$UO_SHARD_CLIENT_DIR" || exit
   WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_CLIENT" $UO_SHARD_CLIENT_FLAGS > /dev/null 2>&1
   echo "[++] Stopped client."
 }
 
 
-function confirm
-{
+confirm() {
   read -r -p "Do you wish to continue? [Y/n] " input
 
   case $input in
@@ -342,31 +344,28 @@ function confirm
 }
 
 
-function uninstall
-{
-  FILES=(
-    "$SHARD_INFO_FILE"
-    "$UOPATCHER_CONFIG"
-    "$UOPATCHER_ROOT"
+uninstall() {
+  local files=(
     "$WINE_PREFIX"
-    "./$UO_ROOT"
     "./xIPL_extras"
     "./xIPL"
   )
 
+  local remove="false"
+
   # Iterate each file, and prompt for deletion.
-  for i in "${FILES[@]}"; do
+  for i in "${files[@]}"; do
     if [ -f "$i" ]; then
       echo -e "\nRemoving -> $i"
-      REMOVE=$(confirm "$i")
-      if [[ "$REMOVE" == "true" ]]; then
+      remove=$(confirm "$i")
+      if [[ "$remove" == "true" ]]; then
         rm -rf "$i"
         echo "  REMOVED -> $i."
       fi
     elif [ -d "$i" ]; then
       echo -e "\nRemoving -> $i"
-      REMOVE=$(confirm "$i")
-      if [[ "$REMOVE" == "true" ]]; then
+      remove=$(confirm "$i")
+      if [[ "$remove" == "true" ]]; then
         rm -rf "$i"
         echo "  REMOVED -> $i."
       fi
@@ -375,8 +374,7 @@ function uninstall
 }
 
 
-function usage
-{
+usage() {
   echo -e "\n$1 [--no-patch] [--no-winetricks] [--uninstall] [--help]"
   echo -e "\n--help           Shows this message."
   echo "--uninstall      Uninstalls the xIPL and all associated files."
@@ -387,25 +385,23 @@ function usage
 }
 
 
-function start_ipl
-{
-  SCRIPT_NAME="$0"
-
-  SHARD_NAME="none"
-  SKIP_PATCH="false"
-  SKIP_WINETRICKS="false"
+start_ipl() {
+  local script_name="$0"
+  local shard_name="none"
+  local skip_patch="false"
+  local skip_winetricks="false"
 
   # Parse the parameters.
   while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
       --help)
-        usage "$SCRIPT_NAME"
+        usage "$script_name"
         exit
         ;;
       --shard)
         shift
-        SHARD_NAME="$1"
+        shard_name="$1"
         shift
         ;;
       --uninstall)
@@ -414,11 +410,11 @@ function start_ipl
         ;;
       --no-patch)
         shift
-        SKIP_PATCH="true"
+        skip_patch="true"
         ;;
       --no-winetricks)
         shift
-        SKIP_WINETRICKS="true"
+        skip_winetricks="true"
         ;;
       *)
         shift
@@ -427,7 +423,7 @@ function start_ipl
   done
 
   # Pull the updated shard configuration.
-  patch_shard_info "$SHARD_NAME"
+  patch_shard_info "$shard_name"
   if [ ! -f "$SHARD_INFO_FILE" ]; then
     echo "[!!] Shard Information file missing, cannot continue."
     exit
@@ -438,13 +434,13 @@ function start_ipl
 
   # Step 1: INSTALL, Ensure all files and packages are installed.
   install_wine
-  if [[ "$SKIP_WINETRICKS" == "false" ]]; then install_winetricks; fi
-  install_uopatcher "$SHARD_NAME"
+  if [[ "$skip_winetricks" == "false" ]]; then install_winetricks; fi
+  install_uopatcher "$shard_name"
 
   # Step 2: PATCH, Validate and modify settings/configurations and files.
-  patch_uopatcher "$SHARD_NAME"
+  patch_uopatcher "$shard_name"
   patch_wine_registry
-  if [[ "$SKIP_PATCH" == "false" ]]; then patch_client; fi
+  if [[ "$skip_patch" == "false" ]]; then patch_client; fi
 
   # Step 3: LAUNCH, start the client.
   launch_client

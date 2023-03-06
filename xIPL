@@ -5,12 +5,19 @@
 #   xIPL_extras, that is responsible for keeping that file updated
 #   with the current release available.
 #   If a new update is available, this script downloads and launches it.
+# Find bugs?
+#   Notify me on GitHub or Discord.
 
 # Name of the shard to patch for, check out:
 #   https://github.com/Ohkthx/xIPL/tree/main/shards
 # For all valid shard names.
 SHARD_NAME="shadowage_reborn"
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# You probably do not need to edit this file beyond this point.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# Required file that does all of the IPL tasks.
 EXTRAS_FILE="xIPL_extras"
 REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
 
@@ -19,36 +26,37 @@ function update_extras
   echo "[--] Updating xIPL."
 
   # Check which package we are using to pull the updates.
-  PULLER_EXE=""
+  local puller_exe=""
   if command -v curl &> /dev/null; then
-    PULLER_EXE="curl"
+    puller_exe="curl"
   elif command -v wget &> /dev/null; then
-    PULLER_EXE="wget"
+    puller_exe="wget"
   fi
 
-  if [[ "$PULLER_EXE" == "" ]]; then
+  if [[ "$puller_exe" == "" ]]; then
     echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
     exit 1
   fi
 
   # Get the headers of the extras file.
-  HEADERS="content-length: 0"
-  case "$PULLER_EXE" in
+  local headers="content-length: 0"
+  case "$puller_exe" in
     curl)
-      HEADERS=$(curl -sI "$REMOTE_EXTRAS")
+      headers=$(curl -sI "$REMOTE_EXTRAS")
       ;;
     wget)
-      HEADERS=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
+      headers=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
       ;;
   esac
 
   # Extract and clean the content-length of whitespace.
-  CLENGTH=$(echo "$HEADERS" | grep -i content-length | awk -F ': ' '{print $2}')
-  CLENGTH="${CLENGTH//[$'\t\r\n ']}"
+  local clength=0
+  clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
+  clength="${clength//[$'\t\r\n ']}"
 
   # Attempt to get the new extras file.
-  if [[ "$CLENGTH" -gt 256 ]]; then
-    case "$PULLER_EXE" in
+  if [[ "$clength" -gt 256 ]]; then
+    case "$puller_exe" in
       curl)
         curl -sO "$REMOTE_EXTRAS"
         ;;
@@ -70,6 +78,9 @@ UPDATE_EXTRAS="true"
 # Parse the parameters, specifically for --no-update.
 for key in "${@}"; do
   if [[ "$key" == "--no-update" ]]; then
+    UPDATE_EXTRAS="false"
+    break
+  elif [[ "$key" == "--help" ]]; then
     UPDATE_EXTRAS="false"
     break
   fi
