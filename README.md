@@ -6,10 +6,17 @@
         <img src="https://img.shields.io/badge/kofi-donate-ffffff.svg?style=for-the-badge&logo=kofi"
             alt="Buy me a coffee! Ko-fi"></a>
 </p>
+<p align="center">
+    <a href="https://discord.gg/HP3fGNtzfs" title="Connect to the community!">
+        <img src="https://img.shields.io/badge/discord-accept%20invite-7289da.svg?style=for-the-badge&logo=discord"
+            alt="Discord connect button."></a>
+</p>
 
 # xIPL, Cross-platform (x) Installer, Patcher, and Launcher (IPL)
 
 The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. This software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
+
+<ins>Feel free to join the **Ultima Online: Linux and MacOS** community by clicking **ACCEPT INVITE** button above.</ins>
 
 The original patching concept and basis for this project is accredited to [Voxpire](https://github.com/Voxpire) with his [ServUO/IPL](https://www.servuo.com/archive/all-in-one-installer-patcher-launcher-ipl.1724/) project. Unfortunately, the project is limited to Microsoft Windows, thus not supporting the audience of my project.
 

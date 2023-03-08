@@ -142,7 +142,7 @@ install_uopatcher() {
 [DEFAULT]
 debug = False
 skip_prompt = True
-verbose = False
+verbose = True
 local_root = $UO_ROOT
 remote_root = $UO_SHARD_ROOT
 remote_port = $UO_SHARD_PORT
