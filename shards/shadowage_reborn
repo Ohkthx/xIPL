@@ -8,4 +8,8 @@ UO_SHARD_CLIENT="ClassicUO.exe"
 UO_SHARD_CLIENT_DIR="ClassicUO"
 UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 
+UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
+UO_SHARD_LAUNCHER_DIR="."
+UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
+
 WINETRICKS_PACKAGES=("dotnet48")

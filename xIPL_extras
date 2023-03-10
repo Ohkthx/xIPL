@@ -18,14 +18,30 @@ UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
 UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
 UOPATCHER_CONFIG="$UOPATCHER_ROOT/config.ini"
 
-# Server files and ClassicUO location.
+# Server files and client location.
 UO_ROOT="$WINE_PREFIX/drive_c/Program Files/Ultima Online"
-UO_SHARD_CLIENT_DIR="ClassicUO"
+
+# Client default variables.
 UO_SHARD_CLIENT="ClassicUO.exe"
+UO_SHARD_CLIENT_DIR="ClassicUO"
 UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 
+# Launcher default variables.
+UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
+UO_SHARD_LAUNCHER_DIR="."
+UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
+
 # Updating Shard Information
-SHARD_INFO_FILE="$TMPDIR/shard_info"
+SHARD_INFO_DIRECTORY="$TMPDIR"
+if [ -z "$SHARD_INFO_DIRECTORY" ]; then
+  if [ -d "/tmp" ]; then
+    SHARD_INFO_DIRECTORY="/tmp"
+  else
+    echo "[!!] Could not located a temporary directory for installation."
+    exit 1
+  fi
+fi
+SHARD_INFO_FILE="$SHARD_INFO_DIRECTORY/shard_info"
 
 PYTHON_EXE="python3"
 if command -v python3.11 &> /dev/null; then
@@ -110,7 +126,7 @@ install_winetricks() {
     detected_package=$(echo "$packages" | grep "$package")
     if [ -z "$detected_package" ]; then
       echo -e "    [!!] '$package' is missing, installing."
-      WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks "$package" > /dev/null 2>&1
+      WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks --force "$package" > /dev/null 2>&1
     fi
     echo -e "  [++] Has: '$package' installed."
   done
@@ -330,6 +346,22 @@ launch_client() {
 }
 
 
+launch_launcher() {
+  echo "[++] Starting launcher."
+  if [ ! -d "$UO_ROOT/$UO_SHARD_LAUNCHER_DIR" ]; then
+    echo "  [!!] Launcher directory missing. Cannot start."
+    exit
+  elif [ ! -f "$UO_ROOT/$UO_SHARD_LAUNCHER_DIR/$UO_SHARD_LAUNCHER" ]; then
+    echo "  [!!] Launcher missing. Cannot start."
+    exit
+  fi
+
+  cd "$UO_ROOT/$UO_SHARD_LAUNCHER_DIR" || exit
+  WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_LAUNCHER" $UO_SHARD_LAUNCHER_FLAGS > /dev/null 2>&1
+  echo "[++] Stopped launcher."
+}
+
+
 confirm() {
   read -r -p "Do you wish to continue? [Y/n] " input
 
@@ -378,8 +410,10 @@ usage() {
   echo -e "\n$1 [--no-patch] [--no-winetricks] [--uninstall] [--help]"
   echo -e "\n--help           Shows this message."
   echo "--uninstall      Uninstalls the xIPL and all associated files."
+  echo "--launcher       Starts the launcher instead of the client."
   echo "--no-patch       Skips patching the client."
   echo "--no-update      Skips updating the xIPL_extras file."
+  echo "--no-refresh     Skips updating the shards configuration file."
   echo "--no-winetricks  Skips the Winetricks validation."
 
 }
@@ -389,7 +423,9 @@ start_ipl() {
   local script_name="$0"
   local shard_name="none"
   local skip_patch="false"
+  local skip_refresh="false"
   local skip_winetricks="false"
+  local start_launcher="false"
 
   # Parse the parameters.
   while [[ $# -gt 0 ]]; do
@@ -408,9 +444,17 @@ start_ipl() {
         uninstall
         exit
         ;;
+      --launcher)
+        shift
+        start_launcher="true"
+        ;;
       --no-patch)
         shift
         skip_patch="true"
+        ;;
+      --no-refresh)
+        shift
+        skip_refresh="true"
         ;;
       --no-winetricks)
         shift
@@ -422,8 +466,12 @@ start_ipl() {
     esac
   done
 
-  # Pull the updated shard configuration.
-  patch_shard_info "$shard_name"
+  if [[ "$skip_refresh" == "false" ]]; then
+    # Pull the updated shard configuration.
+    patch_shard_info "$shard_name"
+  fi
+
+  # Make sure the file exists.
   if [ ! -f "$SHARD_INFO_FILE" ]; then
     echo "[!!] Shard Information file missing, cannot continue."
     exit
@@ -443,5 +491,9 @@ start_ipl() {
   if [[ "$skip_patch" == "false" ]]; then patch_client; fi
 
   # Step 3: LAUNCH, start the client.
-  launch_client
+  if [[ "$start_launcher" == "false" ]]; then
+    launch_client
+  else
+    launch_launcher
+  fi
 }

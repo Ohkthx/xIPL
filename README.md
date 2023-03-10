@@ -57,6 +57,22 @@ File: `xIPL`
 # For all valid shard names.
 SHARD_NAME="example"
 ```
+## Known Issues / Testing
+
+### Tested on
+| OS | Arch | Wine Version | Winetricks Version |
+|----|------|--------------|--------------------|
+| macOS | arm64 | wine-7.7 | 20220411-next |
+| linux | x86_64 | wine-5.5 | 20210206 |
+| linux | x86_64 | wine-8.0 | 20210206 |
+
+### Issues
+<ins>**ClassicUO**</ins>
+- **ClassicUO.exe**
+    1. linux x86_64, Wine version `wine-5.5` has no audio. Wine version `wine-8.0` audio works.
+    2. macOS arm64, Wine version `wine-7.7` audio crackles. No fix yet.
+- **ClassicUOLauncher.exe**
+    1. linux x86_64, Wine version `wine-5.5` will not start Launcher. Wine version `wine-8.0` it works.
 
 ## Installation
 
@@ -90,18 +106,17 @@ wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 
 ## Running
 
-To start the **xIPL**, you just need to type the following. In additional to normal execution, provided are **ALTERNATIVE** steps to make the script executable and started with using `./xIPL`
+To start the **xIPL**, you just need to type the following. In additional to normal execution, provided are **ALTERNATIVE** steps to make the script executable and started with using `./xIPL`. There is also the `--launcher` flag that can be passed to the **xIPL** to start a launcher such as ClassicUOLauncher if it is specified in the servers configuration files. Other advanced functionality can be seen with the `--help` flag.
 ```bash
 # Start with bash.
-bash xIPL
+bash xIPL             # Normal start.
+bash xIPL --help      # See advanced features.
+bash xIPL --launcher  # Start a launcher instead of a client.
 
 # ALTERNATIVE: Make it executable and be able to run with ./xIPL
-chmod +x xIPL
-./xIPL
+chmod +x xIPL       # Only needs to be performed once to mark it executable.
 
-# For advanced functionality, check out:
-bash xIPL --help
-
-# OR if flagged as an executable...
-./xIPL --help
+./xIPL              # Normal start.
+./xIPL --help       # See advanced features.
+./xIPL --launcher   # Start a launcher instead of a client.
 ```

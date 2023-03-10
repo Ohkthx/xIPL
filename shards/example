@@ -7,15 +7,23 @@ UO_SHARD_NAME="My UO Shard"
 UO_SHARD_ROOT="http://patch.example.com/patches"
 UO_SHARD_PORT="2595"
 
-
 # UO_SHARD_CLIENT       - Executable / Client to be launched.
-# UO_SHARD_CLIENT_DIR   - Directory relative to UO_SHARD_ROOT 
+# UO_SHARD_CLIENT_DIR   - Directory relative to UO_SHARD_ROOT
 #                         hosting the UO_SHARD_CLIENT.
 # UO_SHARD_CLIENT_FLAGS - Any special flags to pass to the
 #                         UO_SHARD_CLIENT at startup.
 UO_SHARD_CLIENT="ClassicUO.exe"
 UO_SHARD_CLIENT_DIR="ClassicUO"
 UO_SHARD_CLIENT_FLAGS="-force_driver 1"
+
+# UO_SHARD_LAUNCHER       - Executable / Launcher to be launched.
+# UO_SHARD_LAUNCHER_DIR   - Directory relative to UO_SHARD_ROOT
+#                           hosting the UO_SHARD_LAUNCHER.
+# UO_SHARD_LAUNCHER_FLAGS - Any special flags to pass to the
+#                           UO_SHARD_LAUNCHER at startup.
+UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
+UO_SHARD_LAUNCHER_DIR="."
+UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
 
 # WINETRICKS_PACKAGES - Packages Winetricks needs to install to
 #                       run the client successfully with Wine.
