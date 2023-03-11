@@ -6,20 +6,22 @@
 #   requirements that can be seen inside of the README.md file on
 #   the main repo.
 
-# Wine variables for installation directory (WINE_PREFIX), and architecture.
-WINE_PREFIX="$HOME/.wine64_ultimaonline"
-WINE_ARCH="win64"                            # WINE_ARCH has to be win64, ClassicUO is 64-bit.
+# Wine variables for installation directory (WINEPREFIX), and architecture.
+UO_INSTALL_DIR=".wine64_ultimaonline"
+WINE_PREFIX_ROOT="$HOME"
+export WINEPREFIX="$WINE_PREFIX_ROOT/$UO_INSTALL_DIR"
+export WINEARCH="win64"                      # WINEARCH has to be win64, ClassicUO is 64-bit.
 WINETRICKS_PACKAGES=("dotnet48" "corefonts") # Some typically required packages.
 
 # Location that the UOPatcher files will be accessible.
 UOPATCHER_REMOTE="https://github.com/Ohkthx/uopatcher"
-UOPATCHER_ROOT="$WINE_PREFIX/drive_c/Program Files/uopatcher"
+UOPATCHER_ROOT="$WINEPREFIX/drive_c/Program Files/uopatcher"
 UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
 UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
 UOPATCHER_CONFIG="$UOPATCHER_ROOT/config.ini"
 
 # Server files and client location.
-UO_ROOT="$WINE_PREFIX/drive_c/Program Files/Ultima Online"
+UO_ROOT="$WINEPREFIX/drive_c/Program Files/Ultima Online"
 
 # Client default variables.
 UO_SHARD_CLIENT="ClassicUO.exe"
@@ -30,6 +32,10 @@ UO_SHARD_CLIENT_FLAGS="-force_driver 1"
 UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
 UO_SHARD_LAUNCHER_DIR="."
 UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
+
+# Backup file name
+BACKUP_FILE_NAME="${UO_INSTALL_DIR}.backup"
+BACKUP_FILE_COMPRESSED="true"
 
 # Updating Shard Information
 SHARD_INFO_DIRECTORY="$TMPDIR"
@@ -116,7 +122,7 @@ install_wine() {
 install_winetricks() {
 	echo "[--] Checking WINETRICKS packages."
 	local packages
-	packages=$(WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks list-installed)
+	packages=$(winetricks list-installed)
 
 	for package in "${WINETRICKS_PACKAGES[@]}"; do
 		echo -e "  [--] Checking: '$package' installed."
@@ -124,7 +130,7 @@ install_winetricks() {
 		detected_package=$(echo "$packages" | grep "$package")
 		if [ -z "$detected_package" ]; then
 			echo -e "    [!!] '$package' is missing, installing."
-			WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winetricks --force "$package" >/dev/null 2>&1
+			winetricks --force "$package" >/dev/null 2>&1
 		fi
 		echo -e "  [++] Has: '$package' installed."
 	done
@@ -227,6 +233,31 @@ patch_shard_info() {
 
 }
 
+patch_wine() {
+	echo "[--] Patching Wine, removing auto-mounted drives."
+
+	if [ ! -d "$WINEPREFIX" ]; then
+		echo "  [!!] Wine prefix does not exist... cannot continue."
+		exit 1
+	fi
+
+	if [ -d "$WINEPREFIX/dosdevices" ]; then
+		local plinks
+		plinks=$(find "$WINEPREFIX/dosdevices/" -type l -maxdepth 1)
+
+		# Iterate all of the mounted drives, unlinking non-C:/ drives.
+		for fd in $plinks; do
+			if [ -L "$fd" ]; then
+				if [ "$fd" != "$WINEPREFIX/dosdevices//c:" ]; then
+					unlink $fd
+				fi
+			fi
+		done
+	fi
+
+	echo "[++] Wine patching complete."
+}
+
 patch_uopatcher() {
 	echo "[--] Checking: UOPatcher Updates."
 
@@ -242,6 +273,7 @@ patch_uopatcher() {
 	fi
 
 	# Check and pull the update if it exists.
+	local current_dir
 	local lversion
 	local rversion
 	lversion=$($PYTHON_EXE "$UOPATCHER_CORE" --version)
@@ -249,10 +281,10 @@ patch_uopatcher() {
 
 	if [[ "$lversion" < "$rversion" ]]; then
 		echo "  [--] UOPatcher requires an update. Updating..."
-		CWD=$(pwd)
+		current_dir=$(pwd)
 		cd "$UOPATCHER_ROOT" || exit
 		git pull >/dev/null 2>&1
-		cd "$CWD" || exit
+		cd "$current_dir" || exit
 
 		lversion="$rversion"
 		echo "  [++] UOPatcher updated."
@@ -285,7 +317,7 @@ launch_winecfg() {
 		echo "[!!] winecfg not accessible. Is Wine installed?"
 		exit 1
 	fi
-	WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" winecfg
+	winecfg
 	echo "[++] Stopped winecfg."
 }
 
@@ -300,7 +332,7 @@ launch_client() {
 	fi
 
 	cd "$UO_ROOT/$UO_SHARD_CLIENT_DIR" || exit
-	WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_CLIENT" $UO_SHARD_CLIENT_FLAGS >/dev/null 2>&1
+	wine "$UO_SHARD_CLIENT" $UO_SHARD_CLIENT_FLAGS >/dev/null 2>&1
 	echo "[++] Stopped client."
 }
 
@@ -315,7 +347,7 @@ launch_launcher() {
 	fi
 
 	cd "$UO_ROOT/$UO_SHARD_LAUNCHER_DIR" || exit
-	WINEPREFIX="$WINE_PREFIX" WINEARCH="$WINE_ARCH" wine "$UO_SHARD_LAUNCHER" $UO_SHARD_LAUNCHER_FLAGS >/dev/null 2>&1
+	wine "$UO_SHARD_LAUNCHER" $UO_SHARD_LAUNCHER_FLAGS >/dev/null 2>&1
 	echo "[++] Stopped launcher."
 }
 
@@ -334,7 +366,9 @@ confirm() {
 
 uninstall() {
 	local files=(
-		"$WINE_PREFIX"
+		"$WINEPREFIX"
+		"$WINE_PREFIX_ROOT/$BACKUP_FILE_NAME"
+		"$WINE_PREFIX_ROOT/${BACKUP_FILE_NAME}.tgz"
 		"./xIPL_extras"
 		"./xIPL"
 	)
@@ -361,13 +395,79 @@ uninstall() {
 	done
 }
 
+backup_prefix() {
+	echo "[--] Creating backup of the current WINE PREFIX."
+
+	local filename="$BACKUP_FILE_NAME"
+	if [[ "$BACKUP_FILE_COMPRESSED" == "true" ]]; then
+		filename="${BACKUP_FILE_NAME}.tgz"
+	fi
+
+	# Make sure we are not overriding another backup.
+	if [ -d "$filename" ]; then
+		echo "Backup already exists, do you wish to override it?"
+		local remove
+		remove=$(confirm "$i")
+		if [[ "$remove" == "false" ]]; then
+			return
+		fi
+	fi
+
+	# Create the backup.
+	local current_dir
+	if [[ "$BACKUP_FILE_COMPRESSED" == "true" ]]; then
+		current_dir=$(pwd)
+		cd "$WINE_PREFIX_ROOT" || exit
+		tar czf "$filename" "$UO_INSTALL_DIR"
+		cd "$current_dir" || exit
+	else
+		cp -RP "$WINEPREFIX" "$WINE_PREFIX_ROOT/$filename"
+	fi
+
+	echo "[++] Backup completed."
+}
+
+restore_prefix() {
+	echo "[--] Restoring from a WINE PREFIX backup."
+
+	# Get the backup file name or directory.
+	local filename="$BACKUP_FILE_NAME"
+	if [[ "$BACKUP_FILE_COMPRESSED" == "true" ]]; then
+		filename="${BACKUP_FILE_NAME}.tgz"
+		if [ ! -f "$WINE_PREFIX_ROOT/$filename" ]; then
+			echo "  [!!] Backup does not exist."
+			return
+		fi
+	else
+		if [ ! -d "$WINE_PREFIX_ROOT/$filename" ]; then
+			echo "  [!!] Backup does not exist."
+			return
+		fi
+	fi
+
+	# Restore from file.
+	local current_dir
+	if [[ "$BACKUP_FILE_COMPRESSED" == "true" ]]; then
+		current_dir=$(pwd)
+		cd "$WINE_PREFIX_ROOT" || exit
+		tar xzf "$filename"
+		cd "$current_dir" || exit
+	else
+		cp -RP "$WINE_PREFIX_ROOT/$filename" "$WINEPREFIX"
+	fi
+
+	echo "[++] WINE PREFIX restoration complete."
+}
+
 usage() {
 	echo -e "\nusage: $1 [--no-patch] [--no-winetricks] [--uninstall] [--help]"
 	echo -e "\n--help           Shows this message."
 	echo "--uninstall      Uninstalls the xIPL and all associated files."
 	echo "--winecfg        Starts winecfg in the proper environment."
 	echo "--launcher       Starts the launcher instead of the client."
-	echo "--no-patch       Skips patching the client."
+	echo -e "\n--backup         Create a backup of the WINE PREFIX."
+	echo "--restore        Override current WINE PREFIX with a backup."
+	echo -e "\n--no-patch       Skips patching the client."
 	echo "--no-update      Skips updating the xIPL_extras file."
 	echo "--no-refresh     Skips updating the shards configuration file."
 	echo "--no-winetricks  Skips the Winetricks validation."
@@ -381,7 +481,6 @@ start_ipl() {
 	local skip_patch="false"
 	local skip_refresh="false"
 	local skip_winetricks="false"
-	local start_winecfg="false"
 	local start_launcher="false"
 
 	# Parse the parameters.
@@ -402,12 +501,20 @@ start_ipl() {
 			exit
 			;;
 		--winecfg)
-			shift
-			start_winecfg="true"
+			launch_winecfg
+			exit
 			;;
 		--launcher)
 			shift
 			start_launcher="true"
+			;;
+		--backup)
+			backup_prefix
+			exit
+			;;
+		--restore)
+			restore_prefix
+			exit
 			;;
 		--no-patch)
 			shift
@@ -426,12 +533,6 @@ start_ipl() {
 			;;
 		esac
 	done
-
-	# Start winecfg instead of the rest of the IPL.
-	if [[ "$start_winecfg" == "true" ]]; then
-		launch_winecfg
-		exit 1
-	fi
 
 	if [[ "$skip_refresh" == "false" ]]; then
 		# Pull the updated shard configuration.
@@ -453,6 +554,7 @@ start_ipl() {
 	install_uopatcher "$shard_name"
 
 	# Step 2: PATCH, Validate and modify settings/configurations and files.
+	patch_wine
 	patch_uopatcher "$shard_name"
 	if [[ "$skip_patch" == "false" ]]; then patch_client; fi
 
