@@ -65,6 +65,63 @@ else
 	exit
 fi
 
+# Used to check if most recent xIPL installed.
+#   Needs to be updated in the rare case that script_name
+#   is updated.
+LATEST_XIPL_MD5="87a7aea09c9a570a671e5b5931e7be21"
+
+download_file() {
+	local remote_resource="$1"
+	local local_resource="$2"
+
+	# Check which package we are using to pull the updates.
+	local puller_exe=""
+	if command -v curl &>/dev/null; then
+		puller_exe="curl"
+	elif command -v wget &>/dev/null; then
+		puller_exe="wget"
+	fi
+
+	if [[ "$puller_exe" == "" ]]; then
+		echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+		exit
+	fi
+
+	# Get the headers of the extras file.
+	local headers="content-length: 0"
+	case "$puller_exe" in
+	curl)
+		headers=$(curl -sI "$resource")
+		;;
+	wget)
+		headers=$(wget -q -S -O - "$resource" 2>&1)
+		;;
+	esac
+
+	# Extract and clean the content-length of whitespace.
+	local clength=0
+	clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
+	clength="${clength//[$'\t\r\n ']/}"
+
+	# Attempt to get the new extras file.
+	if [[ "$clength" -gt 32 ]]; then
+		case "$puller_exe" in
+		curl)
+			curl -so "$local_resource" "$remote_resource"
+			;;
+		wget)
+			wget -q "$remote_resource" -O "$local_resource"
+			;;
+		esac
+
+		if [ ! -f "$local_resource" ]; then
+			echo "[!!] Failed to download file."
+		fi
+	else
+		echo "[!!] Could not located remote file."
+		exit
+	fi
+}
 # Checks to make sure WINE is installed, along with its requirements.
 install_wine() {
 	local require_brew="false"
@@ -176,61 +233,42 @@ EOF
 	echo -e "[++] Shard Remote Port: $UO_SHARD_PORT\n"
 }
 
+patch_xIPL() {
+	echo "[--] Checking for xIPL patch."
+
+	local xIPL_filename="./xIPL"
+	if [ ! -f "$xIPL_filename" ]; then
+		echo "  [!!] Unable to located xIPL to check for updates."
+		return
+	fi
+
+	local xIPL_md5
+	if command -v md5 &>/dev/null; then
+		xIPL_md5=$(md5 -q "$xIPL_filename")
+	elif command -v md5sum &>/dev/null; then
+		xIPL_md5=$(md5sum "$xIPL_filename" | awk '{print $1}')
+	else
+		echo "  [!!] Unable to located tool to compare md5."
+		return
+	fi
+
+	if [[ "$LATEST_XIPL_MD5" != "$xIPL_md5" ]]; then
+		echo "  [!!] xIPL not up-to-date, downloading new version."
+		local resource="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$xIPL_filename"
+		download_file "$resource" "$xIPL_filename"
+	fi
+
+	if [ -f "$xIPL_filename" ]; then
+		chmod +x "$xIPL_filename"
+	fi
+
+	echo "[++] Check for xIPL patch complete."
+}
+
 patch_shard_info() {
 	echo "[--] Pulling Shard '$1' configuration."
 	local resource="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
-
-	# Check which package we are using to pull the updates.
-	local puller_exe=""
-	if command -v curl &>/dev/null; then
-		puller_exe="curl"
-	elif command -v wget &>/dev/null; then
-		puller_exe="wget"
-	fi
-
-	if [[ "$puller_exe" == "" ]]; then
-		echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
-		exit
-	fi
-
-	# Get the headers of the extras file.
-	local headers="content-length: 0"
-	case "$puller_exe" in
-	curl)
-		headers=$(curl -sI "$resource")
-		;;
-	wget)
-		headers=$(wget -q -S -O - "$resource" 2>&1)
-		;;
-	esac
-
-	# Extract and clean the content-length of whitespace.
-	local clength=0
-	clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
-	clength="${clength//[$'\t\r\n ']/}"
-
-	# Attempt to get the new extras file.
-	if [[ "$clength" -gt 32 ]]; then
-		case "$puller_exe" in
-		curl)
-			curl -so "$SHARD_INFO_FILE" "$resource"
-			;;
-		wget)
-			wget -q "$resource" -O "$SHARD_INFO_FILE"
-			;;
-		esac
-
-		if [ -f "$SHARD_INFO_FILE" ]; then
-			echo "[++] Pulled Shard '$1' configuration."
-		else
-			echo "[!!] Failed to download Shard '$1' configuration."
-			exit
-		fi
-	else
-		echo "[!!] Could not located remote shard file."
-		exit
-	fi
-
+	download_file "$resource" "$SHARD_INFO_FILE"
 }
 
 patch_wine() {
@@ -319,6 +357,31 @@ launch_winecfg() {
 	fi
 	winecfg
 	echo "[++] Stopped winecfg."
+}
+
+launch_winetricks() {
+	echo "[++] Starting Winetricks."
+
+	if ! command -v winetricks &>/dev/null; then
+		echo "[!!] Winetricks not accessible. Is it installed?"
+		exit 1
+	fi
+
+	local packages
+	packages=$(winetricks list-installed)
+
+	for package in "${@}"; do
+		echo -e "  [--] Checking: '$package' installed."
+		local detected_package
+		detected_package=$(echo "$packages" | grep "$package")
+		if [ -z "$detected_package" ]; then
+			echo -e "    [!!] '$package' is missing, installing."
+			winetricks --force "$package" >/dev/null 2>&1
+		fi
+		echo -e "  [++] Has: '$package' installed."
+	done
+
+	echo "[++] Stopped Winetricks."
 }
 
 launch_client() {
@@ -464,6 +527,7 @@ usage() {
 	echo -e "\n--help           Shows this message."
 	echo "--uninstall      Uninstalls the xIPL and all associated files."
 	echo "--winecfg        Starts winecfg in the proper environment."
+	echo "--winetricks     Must be last flag, installs remaining arguments."
 	echo "--launcher       Starts the launcher instead of the client."
 	echo -e "\n--backup         Create a backup of the WINE PREFIX."
 	echo "--restore        Override current WINE PREFIX with a backup."
@@ -504,6 +568,11 @@ start_ipl() {
 			launch_winecfg
 			exit
 			;;
+		--winetricks)
+			shift
+			launch_winetricks "$@"
+			exit
+			;;
 		--launcher)
 			shift
 			start_launcher="true"
@@ -533,6 +602,9 @@ start_ipl() {
 			;;
 		esac
 	done
+
+	# Make sure the xIPL is up-to-date.
+	patch_xIPL
 
 	if [[ "$skip_refresh" == "false" ]]; then
 		# Pull the updated shard configuration.

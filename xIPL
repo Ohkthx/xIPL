@@ -21,90 +21,89 @@ SHARD_NAME="shadowage_reborn"
 EXTRAS_FILE="xIPL_extras"
 REMOTE_EXTRAS="https://raw.githubusercontent.com/Ohkthx/xIPL/main/$EXTRAS_FILE"
 
-function update_extras
-{
-  echo "[--] Updating xIPL."
+function update_extras {
+	echo "[--] Updating xIPL Extras."
 
-  # Check which package we are using to pull the updates.
-  local puller_exe=""
-  if command -v curl &> /dev/null; then
-    puller_exe="curl"
-  elif command -v wget &> /dev/null; then
-    puller_exe="wget"
-  fi
+	# Check which package we are using to pull the updates.
+	local puller_exe=""
+	if command -v curl &>/dev/null; then
+		puller_exe="curl"
+	elif command -v wget &>/dev/null; then
+		puller_exe="wget"
+	fi
 
-  if [[ "$puller_exe" == "" ]]; then
-    echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
-    exit 1
-  fi
+	if [[ "$puller_exe" == "" ]]; then
+		echo "[!!] Could not resolve download tool, requires 'curl' or 'wget'"
+		exit 1
+	fi
 
-  # Get the headers of the extras file.
-  local headers="content-length: 0"
-  case "$puller_exe" in
-    curl)
-      headers=$(curl -sI "$REMOTE_EXTRAS")
-      ;;
-    wget)
-      headers=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
-      ;;
-  esac
+	# Get the headers of the extras file.
+	local headers="content-length: 0"
+	case "$puller_exe" in
+	curl)
+		headers=$(curl -sI "$REMOTE_EXTRAS")
+		;;
+	wget)
+		headers=$(wget -q -S -O - "$REMOTE_EXTRAS" 2>&1)
+		;;
+	esac
 
-  # Extract and clean the content-length of whitespace.
-  local clength=0
-  clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
-  clength="${clength//[$'\t\r\n ']}"
+	# Extract and clean the content-length of whitespace.
+	local clength=0
+	clength=$(echo "$headers" | grep -i content-length | awk -F ': ' '{print $2}')
+	clength="${clength//[$'\t\r\n ']/}"
 
-  # Attempt to get the new extras file.
-  if [[ "$clength" -gt 256 ]]; then
-    case "$puller_exe" in
-      curl)
-        curl -sO "$REMOTE_EXTRAS"
-        ;;
-      wget)
-        wget -q "$REMOTE_EXTRAS"
-        ;;
-    esac
+	# Attempt to get the new extras file.
+	if [[ "$clength" -gt 256 ]]; then
+		case "$puller_exe" in
+		curl)
+			curl -sO "$REMOTE_EXTRAS"
+			;;
+		wget)
+			wget -q "$REMOTE_EXTRAS"
+			;;
+		esac
 
-    if [ -f "./$EXTRAS_FILE" ]; then
-      echo "[++] Updated xIPL."
-    fi
-  else
-    echo "[!!] Could not located remote xIPL Extras file."
-  fi
+		if [ -f "./$EXTRAS_FILE" ]; then
+			echo "[++] Updated xIPL Extras."
+		fi
+	else
+		echo "[!!] Could not located remote xIPL Extras file."
+	fi
 }
 
 UPDATE_EXTRAS="true"
 
 # Parse the parameters, specifically for --no-update.
 for key in "${@}"; do
-  if [[ "$key" == "--no-update" ]]; then
-    UPDATE_EXTRAS="false"
-    break
-  elif [[ "$key" == "--help" ]]; then
-    UPDATE_EXTRAS="false"
-    break
-  fi
+	if [[ "$key" == "--no-update" ]]; then
+		UPDATE_EXTRAS="false"
+		break
+	elif [[ "$key" == "--help" ]]; then
+		UPDATE_EXTRAS="false"
+		break
+	fi
 done
 
 # Update the extras file.
 if [[ "$UPDATE_EXTRAS" == "true" ]]; then
-  update_extras
+	update_extras
 else
-  echo "[!!] Skipping xIPL updating."
+	echo "[!!] Skipping xIPL Extras updating."
 fi
 
 if [ ! -f "./$EXTRAS_FILE" ]; then
-  echo "[!!] Unknown error occurred, could not download updated xIPL."
-  exit
+	echo "[!!] Unknown error occurred, could not download updated xIPL Extras."
+	exit
 fi
 
 # Source the updated extras, starts the:
 # installation, patching, and launching.
 . "./$EXTRAS_FILE"
 
-# Add the shard as an argument.
-args=("$@")
-args+=("--shard" "$SHARD_NAME")
+# Add the shard as an argument at the beginning.
+args=("--shard" "$SHARD_NAME")
+args+=("$@")
 
 # Start the wrapped IPL.
 start_ipl "${args[@]}"
