@@ -442,14 +442,14 @@ uninstall() {
 	for i in "${files[@]}"; do
 		if [ -f "$i" ]; then
 			echo -e "\nRemoving -> $i"
-			remove=$(confirm "$i")
+			remove=$(confirm)
 			if [[ "$remove" == "true" ]]; then
 				rm -rf "$i"
 				echo "  REMOVED -> $i."
 			fi
 		elif [ -d "$i" ]; then
 			echo -e "\nRemoving -> $i"
-			remove=$(confirm "$i")
+			remove=$(confirm)
 			if [[ "$remove" == "true" ]]; then
 				rm -rf "$i"
 				echo "  REMOVED -> $i."
@@ -470,7 +470,7 @@ backup_prefix() {
 	if [ -d "$filename" ]; then
 		echo "Backup already exists, do you wish to override it?"
 		local remove
-		remove=$(confirm "$i")
+		remove=$(confirm)
 		if [[ "$remove" == "false" ]]; then
 			return
 		fi
