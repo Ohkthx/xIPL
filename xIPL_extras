@@ -91,10 +91,10 @@ download_file() {
 	local headers="content-length: 0"
 	case "$puller_exe" in
 	curl)
-		headers=$(curl -sI "$resource")
+		headers=$(curl -sI "$remote_resource")
 		;;
 	wget)
-		headers=$(wget -q -S -O - "$resource" 2>&1)
+		headers=$(wget -q -S -O - "$remote_resource" 2>&1)
 		;;
 	esac
 
