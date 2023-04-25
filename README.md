@@ -1,14 +1,20 @@
 <p align="center">
     <a href="https://patreon.com/ohkthx" title="Donate to this project using Patreon">
-        <img src="https://img.shields.io/badge/patreon-donate-red.svg?style=for-the-badge&logo=patreon"
+        <img src="https://img.shields.io/badge/patreon-donate-red.svg?style=for-the-badge&color=f38ba8&label=PATREON&logo=patreon&logoColor=f38ba8&labelColor=11111b"
             alt="Patreon donate button"></a>
     <a href="https://ko-fi.com/G2G0J79MY" title="Donate to this project using Ko-fi">
-        <img src="https://img.shields.io/badge/kofi-donate-ffffff.svg?style=for-the-badge&logo=kofi"
+        <img src="https://img.shields.io/badge/kofi-donate-ffffff.svg?style=for-the-badge&color=fab387&label=KOFI&logo=kofi&logoColor=fab387&labelColor=11111b"
             alt="Buy me a coffee! Ko-fi"></a>
-</p>
-<p align="center">
-    <a href="https://discord.gg/HP3fGNtzfs" title="Connect to the community!">
-        <img src="https://img.shields.io/badge/discord-accept%20invite-7289da.svg?style=for-the-badge&logo=discord"
+<br>
+   <a href="https://github.com/ohkthx/uopatcher" title="Required Python Version.">
+        <img src="https://img.shields.io/badge/python-3.9.1+-11111b.svg?style=for-the-badge&color=f9e2af&label=PYTHON&logo=python&logoColor=f9e2af&labelColor=11111b"
+            alt="Required Python Version."></a>
+    <a href="https://github.com/ohkthx/xIPL" title="Size of the repo!">
+        <img src="https://img.shields.io/github/repo-size/ohkthx/xIPL?style=for-the-badge&color=cba6f7&label=SIZE&logo=codesandbox&logoColor=cba6f7&labelColor=11111b"
+            alt="No data."></a>
+<br>
+   <a href="https://discord.gg/HP3fGNtzfs" title="Connect to the community!">
+        <img src="https://img.shields.io/badge/discord-accept%20invite-11111b.svg?style=for-the-badge&color=89B4FA&label=DISCORD&logo=discord&logoColor=89b4fa&labelColor=11111b"
             alt="Discord connect button."></a>
 </p>
 
