@@ -167,7 +167,7 @@ install_wine() {
 		echo "  [!!] Winetricks is required and not installed."
 		if [[ "$require_brew" == "true" ]]; then
 			# Install it via Brew if it is MacOS.
-			brew install --formula gcenx/wine/winetricks >/dev/null 2>&1
+			brew install winetricks >/dev/null 2>&1
 		else
 			exit
 		fi
