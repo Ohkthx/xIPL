@@ -22,8 +22,6 @@
 
 The **xIPL** is a fancy **bash** script designed to automate the **I**nstallation, **P**atching, and **L**aunching of Ultima Online. This software aims to be compatible with Linux, BSD, and MacOS (Intel-base Processors) along with MacOS (M1/M2 Processors).
 
-<ins>Feel free to join the **Ultima Online: Linux and MacOS** community by clicking **ACCEPT INVITE** button above.</ins>
-
 The original patching concept and basis for this project is accredited to [Voxpire](https://github.com/Voxpire) with his [ServUO/IPL](https://www.servuo.com/archive/all-in-one-installer-patcher-launcher-ipl.1724/) project. Unfortunately, the project is limited to Microsoft Windows, thus not supporting the audience of my project.
 
 ## Features
@@ -76,7 +74,7 @@ SHARD_NAME="example"
 <ins>**ClassicUO**</ins>
 - **ClassicUO.exe**
     1. linux x86_64, Wine version `wine-5.5` has no audio. Wine version `wine-8.0` audio works.
-    2. macOS arm64, Wine version `wine-7.7` audio crackles. No fix yet.
+    2. macOS arm64, Wine version `wine-7.7` audio crackles. Setting Audio MIDI Setup -> Format -> 96,000 Hz resolves it.
 - **ClassicUOLauncher.exe**
     1. linux x86_64, Wine version `wine-5.5` will not start Launcher. Wine version `wine-8.0` it works.
 
