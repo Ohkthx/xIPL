@@ -65,11 +65,22 @@ else
 	exit
 fi
 
+IS_MACOS=false
+
 # Used to check if most recent xIPL installed.
 #   Needs to be updated in the rare case that script_name
 #   is updated.
 LATEST_XIPL_MD5="87a7aea09c9a570a671e5b5931e7be21"
 
+# Creates a WINEPREFIX.
+init_wine() {
+	# Initialize the wine prefix.
+	if [ ! -d "$WINEPREFIX" ]; then
+		wineboot -u >/dev/null 2>&1
+	fi
+}
+
+# Downloads a file from a remote source.
 download_file() {
 	local remote_resource="$1"
 	local local_resource="$2"
@@ -122,6 +133,7 @@ download_file() {
 		exit
 	fi
 }
+
 # Checks to make sure WINE is installed, along with its requirements.
 install_wine() {
 	local require_brew="false"
@@ -134,6 +146,7 @@ install_wine() {
 		echo -e "\n[++] Detected OS: FreeBSD"
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
 		echo -e "\n[++] Detected OS: MacOS"
+		IS_MACOS=true
 		require_brew="true"
 		if ! command -v brew &>/dev/null; then
 			echo "  [!!] Brew is required and not installed."
@@ -172,15 +185,21 @@ install_wine() {
 			exit
 		fi
 	fi
+
+	# Makes sure wine prefix is created.
+	init_wine
+
 	echo "[++] WINE and WINETRICKS installation good."
 }
 
 # Checks to make sure the WINETRICKS packages are installed.
 install_winetricks() {
 	echo "[--] Checking WINETRICKS packages."
+	echo "  [!!] Note: dotnet packages will take quite some time."
 	local packages
 	packages=$(winetricks list-installed)
 
+	# Iterate all required packages and install.
 	for package in "${WINETRICKS_PACKAGES[@]}"; do
 		echo -e "  [--] Checking: '$package' installed."
 		local detected_package
@@ -233,6 +252,27 @@ EOF
 	echo -e "[++] Shard Remote Port: $UO_SHARD_PORT\n"
 }
 
+# Overrides 'dsound' DLL to fix audio issues on MacOS.
+set_dsound_override() {
+	echo "[--] Checking: DSOUND DLL Override for WINE."
+	if [[ " ${WINETRICKS_PACKAGES[*]} " != *" dsound "* ]] || [[ "$IS_MACOS" != true ]]; then
+		echo "  [!!] Not required, package not required or wrong OS."
+		return
+	fi
+
+	# Extract current setting for dsound from WINE's registry
+	local current_setting=$(wine regedit /E /dev/stdout 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' 2> /dev/null | grep -E '"dsound"=".*"')
+
+	# Check if dsound is already set to native
+	if [[ "$current_setting" == *'"dsound"="native"'* ]]; then
+		echo "  [++] DSOUND DLL already corrected."
+	else
+		# Set dsound to native
+		wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v dsound /d native /f >/dev/null 2>&1
+		echo "  [++] DSOUND DLL corrected."
+	fi
+}
+
 patch_xIPL() {
 	echo "[--] Checking for xIPL patch."
 
@@ -265,12 +305,14 @@ patch_xIPL() {
 	echo "[++] Check for xIPL patch complete."
 }
 
+# Pull shard information to know how to configure xIPL.
 patch_shard_info() {
 	echo "[--] Pulling Shard '$1' configuration."
 	local resource="https://raw.githubusercontent.com/Ohkthx/xIPL/main/shards/$1"
 	download_file "$resource" "$SHARD_INFO_FILE"
 }
 
+# Patches WINE settings and sets DLLs if required.
 patch_wine() {
 	echo "[--] Patching Wine, removing auto-mounted drives."
 
@@ -278,6 +320,9 @@ patch_wine() {
 		echo "  [!!] Wine prefix does not exist... cannot continue."
 		exit 1
 	fi
+
+	# Check if DSOUND needs to be set.
+	set_dsound_override
 
 	if [ -d "$WINEPREFIX/dosdevices" ]; then
 		local plinks
@@ -296,6 +341,7 @@ patch_wine() {
 	echo "[++] Wine patching complete."
 }
 
+# Checks for UOPatcher updates.
 patch_uopatcher() {
 	echo "[--] Checking: UOPatcher Updates."
 
@@ -351,6 +397,9 @@ patch_client() {
 launch_winecfg() {
 	echo "[++] Starting winecfg."
 
+	# Makes sure wine prefix is created.
+	init_wine
+
 	if ! command -v winecfg &>/dev/null; then
 		echo "[!!] winecfg not accessible. Is Wine installed?"
 		exit 1
@@ -366,6 +415,9 @@ launch_winetricks() {
 		echo "[!!] Winetricks not accessible. Is it installed?"
 		exit 1
 	fi
+
+	# Makes sure wine prefix is created.
+	init_wine
 
 	local packages
 	packages=$(winetricks list-installed)
@@ -385,6 +437,9 @@ launch_winetricks() {
 }
 
 launch_client() {
+	# Makes sure wine prefix is created.
+	init_wine
+
 	echo "[++] Starting client."
 	if [ ! -d "$UO_ROOT/$UO_SHARD_CLIENT_DIR" ]; then
 		echo "  [!!] Client directory missing, bad installation."
@@ -400,6 +455,9 @@ launch_client() {
 }
 
 launch_launcher() {
+	# Makes sure wine prefix is created.
+	init_wine
+
 	echo "[++] Starting launcher."
 	if [ ! -d "$UO_ROOT/$UO_SHARD_LAUNCHER_DIR" ]; then
 		echo "  [!!] Launcher directory missing. Cannot start."
