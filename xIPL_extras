@@ -586,7 +586,8 @@ usage() {
 	echo "--uninstall      Uninstalls the xIPL and all associated files."
 	echo "--winecfg        Starts winecfg in the proper environment."
 	echo "--winetricks     Must be last flag, installs remaining arguments."
-	echo "--remote-config  Specify a remote server file config to use."
+	echo "--shard		   Specify a remote server file config to use."
+	echo "--remote-config  Same as the above command."
 	echo "--local-config   Specify a local server file config to use."
 	echo "--launcher       Starts the launcher instead of the client."
 	echo -e "\n--backup         Create a backup of the WINE PREFIX."
@@ -615,6 +616,11 @@ start_ipl() {
 		--help)
 			usage "$script_name"
 			exit
+			;;
+		--shard)
+			shift
+			shard_name="$1"
+			shift
 			;;
 		--remote-config)
 			shift
