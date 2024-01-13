@@ -25,6 +25,7 @@ The **xIPL** is a fancy **bash** script designed to automate the **I**nstallatio
 The original patching concept and basis for this project is accredited to [Voxpire](https://github.com/Voxpire) with his [ServUO/IPL](https://www.servuo.com/archive/all-in-one-installer-patcher-launcher-ipl.1724/) project. Unfortunately, the project is limited to Microsoft Windows, thus not supporting the audience of my project.
 
 ## Features
+
 - Cross-platform, tested in Linux (Intel 64-bit) and MacOS (ARM M2)
 - Configurable to various shards.
 - xIPL auto-updates itself.
@@ -33,20 +34,22 @@ The original patching concept and basis for this project is accredited to [Voxpi
 - Launches client
 
 #### TODO
+
 - Preserve backup of macro profiles.
 
 ## Optional: Configuration and Shard Specific Settings
 
 The default configuration for the **xIPL** is aimed at the shard **Shadow Age: REBORN**. If you would like to have your shard added to the '[shards/](https://github.com/Ohkthx/xIPL/tree/main/shards)' directory, then feel free to contact me at:
-| Service | Username    | ID                 |
+| Service | Username | ID |
 |:-------:|:-----------:|:------------------:|
-| Discord | Schism#6126 | 113426175669313536 |
- 
-When messaging me, please __**do not forget**__ include your configuration file. An example can be found [here](https://github.com/Ohkthx/xIPL/blob/main/shards/example). After your configuration is added, users will then be able to edit line 12 of **xIPL** with the name of your configuration. I retain the right to edit or remove any configuration for any reason but that is highly unlikely to ever happen. The most likely scenario is in the event a future patch adds functionality to the **xIPL** and all configurations will need to be updated.
+| Discord | offx1err | 113426175669313536 |
+
+When messaging me, please \***\*do not forget\*\*** include your configuration file. An example can be found [here](https://github.com/Ohkthx/xIPL/blob/main/shards/example). After your configuration is added, users will then be able to edit line 12 of **xIPL** with the name of your configuration. I retain the right to edit or remove any configuration for any reason but that is highly unlikely to ever happen. The most likely scenario is in the event a future patch adds functionality to the **xIPL** and all configurations will need to be updated.
 
 Example provided below to assign the '[example](https://github.com/Ohkthx/xIPL/blob/main/shards/example)' configuration as the **xIPL**'s Shard:
 
 File: `xIPL`
+
 ```bash
 #!/usr/bin/env bash
 
@@ -61,22 +64,26 @@ File: `xIPL`
 # For all valid shard names.
 SHARD_NAME="example"
 ```
+
 ## Known Issues / Testing
 
 ### Tested on
-| OS | Arch | Wine Version | Winetricks Version |
-|----|------|--------------|--------------------|
-| macOS | arm64 | wine-7.7 | 20220411-next |
-| linux | x86_64 | wine-5.5 | 20210206 |
-| linux | x86_64 | wine-8.0 | 20210206 |
+
+| OS    | Arch   | Wine Version | Winetricks Version |
+| ----- | ------ | ------------ | ------------------ |
+| macOS | arm64  | wine-7.7     | 20220411-next      |
+| linux | x86_64 | wine-5.5     | 20210206           |
+| linux | x86_64 | wine-8.0     | 20210206           |
 
 ### Issues
+
 <ins>**ClassicUO**</ins>
+
 - **ClassicUO.exe**
-    1. linux x86_64, Wine version `wine-5.5` has no audio. Wine version `wine-8.0` audio works.
-    2. macOS arm64, Wine version `wine-7.7` audio crackles. Setting Audio MIDI Setup -> Format -> 96,000 Hz resolves it.
+  1. linux x86_64, Wine version `wine-5.5` has no audio. Wine version `wine-8.0` audio works.
+  2. macOS arm64, Wine version `wine-7.7` audio crackles. Setting Audio MIDI Setup -> Format -> 96,000 Hz resolves it.
 - **ClassicUOLauncher.exe**
-    1. linux x86_64, Wine version `wine-5.5` will not start Launcher. Wine version `wine-8.0` it works.
+  1. linux x86_64, Wine version `wine-5.5` will not start Launcher. Wine version `wine-8.0` it works.
 
 ## Installation
 
@@ -90,7 +97,7 @@ cd xIPL
 # Obtaining the xIPL with CURL
 curl -O https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 
-# Obtaining the xIPL with WGET
+# OPTIONAL: Obtaining the xIPL with WGET instead.
 wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 ```
 
@@ -98,7 +105,7 @@ wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 
 - **Perl** - This is used to replace text in some of the registry files for Wine since **sed**'s behaviour is platform dependent.
 - **Git** - Used to download and update additional dependencies.
-- **Python** - Minimum of Python 3 version __**3.9.1**__
+- **Python** - Minimum of Python 3 version \***\*3.9.1\*\***
 - **Brew** - (MacOS) Used for the installation of WINE and WINETRICKS.
 - **curl** or **wget** - Used for auto-updating the xIPL.
 - **Wine** - Run the ClassicUO client. Downloaded automatically for MacOS, package provided by [Gcenx/homebrew-wine](https://github.com/Gcenx/homebrew-wine)
@@ -111,11 +118,14 @@ wget https://raw.githubusercontent.com/Ohkthx/xIPL/main/xIPL
 ## Running
 
 To start the **xIPL**, you just need to type the following. In additional to normal execution, provided are **ALTERNATIVE** steps to make the script executable and started with using `./xIPL`. There is also the `--launcher` flag that can be passed to the **xIPL** to start a launcher such as ClassicUOLauncher if it is specified in the servers configuration files. Other advanced functionality can be seen with the `--help` flag.
+
 ```bash
 # Start with bash.
 bash xIPL             # Normal start.
 bash xIPL --help      # See advanced features.
 bash xIPL --launcher  # Start a launcher instead of a client.
+
+
 
 # ALTERNATIVE: Make it executable and be able to run with ./xIPL
 chmod +x xIPL       # Only needs to be performed once to mark it executable.

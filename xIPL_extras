@@ -586,6 +586,8 @@ usage() {
 	echo "--uninstall      Uninstalls the xIPL and all associated files."
 	echo "--winecfg        Starts winecfg in the proper environment."
 	echo "--winetricks     Must be last flag, installs remaining arguments."
+	echo "--remote-config  Specify a remote server file config to use."
+	echo "--local-config   Specify a local server file config to use."
 	echo "--launcher       Starts the launcher instead of the client."
 	echo -e "\n--backup         Create a backup of the WINE PREFIX."
 	echo "--restore        Override current WINE PREFIX with a backup."
@@ -604,6 +606,7 @@ start_ipl() {
 	local skip_refresh="false"
 	local skip_winetricks="false"
 	local start_launcher="false"
+	local shard_file_override="false"
 
 	# Parse the parameters.
 	while [[ $# -gt 0 ]]; do
@@ -613,9 +616,15 @@ start_ipl() {
 			usage "$script_name"
 			exit
 			;;
-		--shard)
+		--remote-config)
 			shift
 			shard_name="$1"
+			shift
+			;;
+		--local-config)
+			shift
+			SHARD_INFO_FILE="$1"
+			shard_file_override="true"
 			shift
 			;;
 		--uninstall)
@@ -664,7 +673,7 @@ start_ipl() {
 	# Make sure the xIPL is up-to-date.
 	patch_xIPL
 
-	if [[ "$skip_refresh" == "false" ]]; then
+	if [[ "$skip_refresh" == "false" && "$shard_file_override" == "false" ]]; then
 		# Pull the updated shard configuration.
 		patch_shard_info "$shard_name"
 	fi
