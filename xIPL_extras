@@ -13,16 +13,6 @@ export WINEPREFIX="$WINE_PREFIX_ROOT/$UO_INSTALL_DIR"
 export WINEARCH="win64"                      # WINEARCH has to be win64, ClassicUO is 64-bit.
 WINETRICKS_PACKAGES=("dotnet48" "corefonts") # Some typically required packages.
 
-# Location that the UOPatcher files will be accessible.
-UOPATCHER_REMOTE="https://github.com/Ohkthx/uopatcher"
-UOPATCHER_ROOT="$WINEPREFIX/drive_c/Program Files/uopatcher"
-UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
-UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
-UOPATCHER_CONFIG="$UOPATCHER_ROOT/config.ini"
-
-# Server files and client location.
-UO_ROOT="$WINEPREFIX/drive_c/Program Files/Ultima Online"
-
 # Client default variables.
 UO_SHARD_CLIENT="ClassicUO.exe"
 UO_SHARD_CLIENT_DIR="ClassicUO"
@@ -33,21 +23,35 @@ UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
 UO_SHARD_LAUNCHER_DIR="."
 UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
 
-# Backup file name
-BACKUP_FILE_NAME="${UO_INSTALL_DIR}.backup"
-BACKUP_FILE_COMPRESSED="true"
+# Set all of the environment variables.
+set_env() {
+	# Location that the UOPatcher files will be accessible.
+	UOPATCHER_REMOTE="https://github.com/Ohkthx/uopatcher"
+	UOPATCHER_ROOT="$WINEPREFIX/drive_c/Program Files/uopatcher"
+	UOPATCHER_SRC="$UOPATCHER_ROOT/uopatcher"
+	UOPATCHER_CORE="$UOPATCHER_SRC/core.py"
+	UOPATCHER_CONFIG="$UOPATCHER_ROOT/config.ini"
 
-# Updating Shard Information
-SHARD_INFO_DIRECTORY="$TMPDIR"
-if [ -z "$SHARD_INFO_DIRECTORY" ]; then
-	if [ -d "/tmp" ]; then
-		SHARD_INFO_DIRECTORY="/tmp"
-	else
-		echo "[!!] Could not located a temporary directory for installation."
-		exit 1
+	# Server files and client location.
+	UO_ROOT="$WINEPREFIX/drive_c/Program Files/Ultima Online"
+
+
+	# Backup file name
+	BACKUP_FILE_NAME="${UO_INSTALL_DIR}.backup"
+	BACKUP_FILE_COMPRESSED="true"
+
+	# Updating Shard Information
+	SHARD_INFO_DIRECTORY="$TMPDIR"
+	if [ -z "$SHARD_INFO_DIRECTORY" ]; then
+		if [ -d "/tmp" ]; then
+			SHARD_INFO_DIRECTORY="/tmp"
+		else
+			echo "[!!] Could not located a temporary directory for installation."
+			exit 1
+		fi
 	fi
-fi
-SHARD_INFO_FILE="$SHARD_INFO_DIRECTORY/shard_info"
+	SHARD_INFO_FILE="$SHARD_INFO_DIRECTORY/shard_info"
+}
 
 PYTHON_EXE="python3"
 if command -v python3.11 &>/dev/null; then
@@ -609,6 +613,9 @@ start_ipl() {
 	local start_launcher="false"
 	local shard_file_override="false"
 
+	# Default environment.
+	set_env
+
 	# Parse the parameters.
 	while [[ $# -gt 0 ]]; do
 		key="$1"
@@ -630,6 +637,7 @@ start_ipl() {
 		--local-config)
 			shift
 			SHARD_INFO_FILE="$1"
+			shard_name="$1"
 			shard_file_override="true"
 			shift
 			;;
@@ -690,8 +698,9 @@ start_ipl() {
 		exit
 	fi
 
-	# Load the shard information file
+	# Load the shard information file and update environment
 	. "$SHARD_INFO_FILE"
+	set_env
 
 	# Step 1: INSTALL, Ensure all files and packages are installed.
 	install_wine
