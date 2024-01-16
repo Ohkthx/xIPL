@@ -74,7 +74,7 @@ IS_MACOS=false
 # Used to check if most recent xIPL installed.
 #   Needs to be updated in the rare case that script_name
 #   is updated.
-LATEST_XIPL_MD5="87a7aea09c9a570a671e5b5931e7be21"
+LATEST_XIPL_MD5="5fdb830d92681b31e3a7c3c38d406709"
 
 # Creates a WINEPREFIX.
 init_wine() {
@@ -288,9 +288,9 @@ patch_xIPL() {
 
 	local xIPL_md5
 	if command -v md5 &>/dev/null; then
-		xIPL_md5=$(md5 -q "$xIPL_filename")
+		xIPL_md5=$(tail -n +20 "$xIPL_filename" | md5 -q)
 	elif command -v md5sum &>/dev/null; then
-		xIPL_md5=$(md5sum "$xIPL_filename" | awk '{print $1}')
+		xIPL_md5=$(tail -n +20 "$xIPL_filename" | md5sum | awk '{print $1}')
 	else
 		echo "  [!!] Unable to located tool to compare md5."
 		return
