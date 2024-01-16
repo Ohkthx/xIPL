@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+UO_SHARD_NAME="Ultima Online: UNCHAINED"
+UO_SHARD_ROOT="http://unchained.patchuo.com"
+UO_SHARD_PORT="2595"
+
+UO_SHARD_CLIENT="ClassicUO.exe"
+UO_SHARD_CLIENT_DIR="."
+UO_SHARD_CLIENT_FLAGS="-force_driver 1"
+
+UO_SHARD_LAUNCHER="ClassicUOLauncher.exe"
+UO_SHARD_LAUNCHER_DIR="."
+UO_SHARD_LAUNCHER_FLAGS="-force_driver 1"
+
+WINETRICKS_PACKAGES=("dotnet48")
+
+# Wine overrides for custom folder installation.
+WINEPREFIX="$(pwd)/wine64_unchained"
+UO_INSTALL_DIR="$WINEPREFIX" # for `./xIPL --backup` command.
